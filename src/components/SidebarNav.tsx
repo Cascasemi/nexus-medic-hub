@@ -44,7 +44,7 @@ export const SidebarNav = () => {
     >
       <div className="flex items-center p-4 border-b border-sidebar-border">
         <ActivitySquare className="text-white mr-2" size={collapsed ? 24 : 28} />
-        {!collapsed && <span className="text-white font-semibold text-xl">MedicMetrics</span>}
+        {!collapsed && <span className="text-white font-semibold text-xl">Nexus Medic</span>}
       </div>
       
       <div className="flex-1 overflow-y-auto py-6 px-3">

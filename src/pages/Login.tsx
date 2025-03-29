@@ -25,7 +25,7 @@ const Login = () => {
       await login(email, password);
       toast({
         title: "Login successful",
-        description: "Welcome back to MedicMetrics Hub",
+        description: "Welcome back to Nexus Medic Hub",
       });
       navigate("/dashboard");
     } catch (error) {
@@ -47,7 +47,7 @@ const Login = () => {
             <div className="flex justify-center mb-2">
               <ActivitySquare size={40} className="text-medical-500" />
             </div>
-            <CardTitle className="text-2xl font-bold text-medical-700">MedicMetrics Hub</CardTitle>
+            <CardTitle className="text-2xl font-bold text-medical-700">Nexus Medic Hub</CardTitle>
             <CardDescription>
               Enter your credentials to access your dashboard
             </CardDescription>

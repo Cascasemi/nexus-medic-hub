@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import { SidebarNav } from "@/components/SidebarNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
+import { ActivitySquare } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
