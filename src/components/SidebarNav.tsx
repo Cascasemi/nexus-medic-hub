@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,25 +31,14 @@ const SidebarItem = ({ icon, title, to, isCollapsed }: SidebarItemProps) => {
   );
 };
 
-interface SidebarNavProps {
-  onCollapseChange?: (collapsed: boolean) => void;
-}
-
-export const SidebarNav = ({ onCollapseChange }: SidebarNavProps) => {
+export const SidebarNav = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { currentUser, logout } = useAuth();
-
-  // Notify parent component when sidebar collapse state changes
-  useEffect(() => {
-    if (onCollapseChange) {
-      onCollapseChange(collapsed);
-    }
-  }, [collapsed, onCollapseChange]);
 
   return (
     <div 
       className={cn(
-        "h-screen bg-sidebar flex flex-col transition-all duration-300 border-r border-sidebar-border fixed left-0 top-0 z-10", 
+        "h-screen bg-sidebar flex flex-col transition-all duration-300 border-r border-sidebar-border", 
         collapsed ? "w-16" : "w-64"
       )}
     >
