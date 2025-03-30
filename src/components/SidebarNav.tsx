@@ -58,7 +58,7 @@ export const SidebarNav = ({ onCollapseChange }: SidebarNavProps) => {
         {!collapsed && <span className="text-white font-semibold text-xl">Nexus Medic</span>}
       </div>
       
-      <div className="flex-1 overflow-y-hidden py-6 px-3">
+      <div className="flex-1 overflow-y-auto py-6 px-3">
         <nav className="space-y-2">
           <SidebarItem 
             icon={<Settings />} 
