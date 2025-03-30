@@ -32,7 +32,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     <div className="flex min-h-screen">
       <SidebarNav onCollapseChange={setSidebarCollapsed} />
       <div 
-        className={`flex-1 transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}
+        className={`flex-1 overflow-y-auto ${sidebarCollapsed ? 'sidebar-fixed-layout-collapsed' : 'sidebar-fixed-layout'}`}
       >
         <main className="p-6">{children}</main>
       </div>
