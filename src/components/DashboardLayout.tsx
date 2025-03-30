@@ -1,5 +1,5 @@
 
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { SidebarNav } from "@/components/SidebarNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -11,6 +11,7 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { isAuthenticated, loading } = useAuth();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   if (loading) {
     return (
@@ -29,9 +30,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="flex min-h-screen">
-      <SidebarNav />
-      <div className="flex-1 overflow-y-auto">
-        <main>{children}</main>
+      <SidebarNav onCollapseChange={setSidebarCollapsed} />
+      <div 
+        className={`flex-1 overflow-y-auto ${sidebarCollapsed ? 'sidebar-fixed-layout-collapsed' : 'sidebar-fixed-layout'}`}
+      >
+        <main className="p-6">{children}</main>
       </div>
     </div>
   );

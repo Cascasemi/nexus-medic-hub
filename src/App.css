@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -39,4 +40,13 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Add padding to main content to prevent overlap with fixed sidebar */
+.sidebar-fixed-layout {
+  padding-left: 16rem; /* Matches default sidebar width (w-64 = 16rem) */
+}
+
+.sidebar-fixed-layout-collapsed {
+  padding-left: 4rem; /* Matches collapsed sidebar width (w-16 = 4rem) */
 }
