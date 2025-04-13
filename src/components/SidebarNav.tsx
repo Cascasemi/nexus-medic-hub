@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { ActivitySquare, ChevronLeft, ChevronRight, FolderOpen, LogOut, Settings, UserRound, MessageSquare } from "lucide-react";
+import { ActivitySquare, ChevronLeft, ChevronRight, FolderOpen, Home, LogOut, Settings, UserRound, MessageSquare, Video } from "lucide-react";
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -38,7 +38,7 @@ export const SidebarNav = () => {
   return (
     <div 
       className={cn(
-        "h-screen bg-sidebar flex flex-col transition-all duration-300 border-r border-sidebar-border", 
+        "h-screen bg-sidebar flex flex-col transition-all duration-300 border-r border-sidebar-border fixed", 
         collapsed ? "w-16" : "w-64"
       )}
     >
@@ -50,9 +50,15 @@ export const SidebarNav = () => {
       <div className="flex-1 overflow-y-auto py-6 px-3">
         <nav className="space-y-2">
           <SidebarItem 
-            icon={<Settings />} 
-            title="Manual Control" 
+            icon={<Home />} 
+            title="Dashboard" 
             to="/dashboard" 
+            isCollapsed={collapsed} 
+          />
+          <SidebarItem 
+            icon={<Video />} 
+            title="Manual Control" 
+            to="/manual-control" 
             isCollapsed={collapsed} 
           />
           <SidebarItem 

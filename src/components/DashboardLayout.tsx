@@ -30,8 +30,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <div className="flex min-h-screen">
       <SidebarNav />
-      <div className="flex-1 overflow-y-auto">
-        <main>{children}</main>
+      <div className="flex-1 ml-16 transition-all duration-300">
+        <main className="min-h-screen">{children}</main>
       </div>
     </div>
   );

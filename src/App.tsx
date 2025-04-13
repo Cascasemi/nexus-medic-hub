@@ -9,11 +9,11 @@ import DashboardLayout from "@/components/DashboardLayout";
 
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
+import ManualControl from "@/pages/ManualControl";
 import Patients from "@/pages/Patients";
 import Folders from "@/pages/Folders";
 import Responses from "@/pages/Responses";
 import NotFound from "@/pages/NotFound";
-import { ActivitySquare } from "lucide-react";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +30,11 @@ const App = () => {
               <Route path="/dashboard" element={
                 <DashboardLayout>
                   <Dashboard />
+                </DashboardLayout>
+              } />
+              <Route path="/manual-control" element={
+                <DashboardLayout>
+                  <ManualControl />
                 </DashboardLayout>
               } />
               <Route path="/patients" element={
