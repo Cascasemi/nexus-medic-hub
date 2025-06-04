@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '@/utils/axiosConfig';
@@ -47,15 +46,14 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
-    navigate('/');
+    navigate('/login');
   };
 
   const value = {
     user,
     loading,
     login,
-    logout,
-    isAuthenticated: !!user
+    logout
   };
 
   return (
