@@ -1,91 +1,68 @@
+import { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '@/utils/axiosConfig';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+const AuthContext = createContext();
 
-interface Doctor {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  avatar?: string;
-}
-
-interface AuthContextType {
-  currentUser: Doctor | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
-
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<Doctor | null>(null);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Check if user is already logged in from localStorage
   useEffect(() => {
-    const user = localStorage.getItem("medic_user");
-    if (user) {
-      setCurrentUser(JSON.parse(user));
+    // Check for existing session on initial load
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+
+    if (token && storedUser) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setUser(JSON.parse(storedUser));
     }
     setLoading(false);
   }, []);
 
-  // Mock login function - in a real app, this would connect to an API
-  const login = async (email: string, password: string) => {
-    setLoading(true);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Simple validation - in a real app, this would verify credentials with backend
-    if (email === "doctor@example.com" && password === "password") {
-      const user = {
-        id: "d-1",
-        name: "Dr. Jane Smith",
-        email: "doctor@example.com",
-        role: "Senior Physician",
-        avatar: "/doctor-avatar.jpg"
-      };
+  const login = async (email, password) => {
+    try {
+      const response = await api.post('/auth/staff/login', { email, password });
       
-      setCurrentUser(user);
-      localStorage.setItem("medic_user", JSON.stringify(user));
-      navigate("/dashboard");
-    } else {
-      throw new Error("Invalid email or password");
+      const { user, access_token } = response.data;
+      
+      // Store token and user
+      localStorage.setItem('token', access_token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Set axios auth header
+      api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      
+      setUser(user);
+      return user;
+    } catch (error) {
+      throw new Error(error.response?.data?.error || 'Login failed');
     }
-    
-    setLoading(false);
   };
 
   const logout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem("medic_user");
-    navigate("/");
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete api.defaults.headers.common['Authorization'];
+    setUser(null);
+    navigate('/login');
   };
 
   const value = {
-    currentUser,
+    user,
     loading,
     login,
-    logout,
-    isAuthenticated: !!currentUser
+    logout
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
+}

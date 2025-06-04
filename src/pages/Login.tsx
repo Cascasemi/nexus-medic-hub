@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { ActivitySquare } from "lucide-react";
+import api from "@/utils/axiosConfig";
 
 const Login = () => {
   const [email, setEmail] = useState("doctor@example.com");
@@ -17,22 +17,26 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
+      // Call login function from AuthContext
       await login(email, password);
+      
       toast({
         title: "Login successful",
         description: "Welcome back to Nexus Medic Hub",
       });
+      
+      // Redirect to dashboard
       navigate("/dashboard");
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "Invalid email or password",
+        description: error.message || "Invalid email or password",
       });
     } finally {
       setIsLoading(false);
