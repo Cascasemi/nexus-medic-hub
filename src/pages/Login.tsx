@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { ActivitySquare } from "lucide-react";
-import api from "@/utils/axiosConfig";
 
 const Login = () => {
   const [email, setEmail] = useState("doctor@example.com");
@@ -22,6 +22,8 @@ const Login = () => {
     setIsLoading(true);
     
     try {
+      console.log("Attempting login with:", { email, password });
+      
       // Call login function from AuthContext
       await login(email, password);
       
@@ -30,9 +32,11 @@ const Login = () => {
         description: "Welcome back to Nexus Medic Hub",
       });
       
+      console.log("Login successful, navigating to dashboard");
       // Redirect to dashboard
       navigate("/dashboard");
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         variant: "destructive",
         title: "Login failed",
