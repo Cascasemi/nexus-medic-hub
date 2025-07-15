@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { ActivitySquare, ChevronLeft, ChevronRight, FolderOpen, Home, LogOut, Settings, UserRound, MessageSquare, Video } from "lucide-react";
+import { ActivitySquare, ChevronLeft, ChevronRight, FolderOpen, Home, LogOut, Settings, UserRound, MessageSquare, Video, Users, UserCog } from "lucide-react";
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -33,7 +32,15 @@ const SidebarItem = ({ icon, title, to, isCollapsed }: SidebarItemProps) => {
 
 export const SidebarNav = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const { currentUser, logout } = useAuth();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <div 
@@ -79,6 +86,12 @@ export const SidebarNav = () => {
             to="/responses" 
             isCollapsed={collapsed} 
           />
+          <SidebarItem 
+            icon={<Users />} 
+            title="Manage Staff" 
+            to="/manage-staff" 
+            isCollapsed={collapsed} 
+          />
         </nav>
       </div>
       
@@ -90,11 +103,11 @@ export const SidebarNav = () => {
           {!collapsed && (
             <div className="flex items-center">
               <div className="h-8 w-8 rounded-full bg-sidebar-accent flex items-center justify-center text-white font-medium">
-                {currentUser?.name.charAt(0)}
+                {user?.name.charAt(0)}
               </div>
               <div className="ml-2">
                 <p className="text-sm font-medium text-white truncate max-w-[120px]">
-                  {currentUser?.name}
+                  {user?.name}
                 </p>
               </div>
             </div>
@@ -104,7 +117,7 @@ export const SidebarNav = () => {
             variant="ghost" 
             size="icon" 
             className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            onClick={() => logout()}
+            onClick={handleLogout}
           >
             <LogOut size={20} />
           </Button>

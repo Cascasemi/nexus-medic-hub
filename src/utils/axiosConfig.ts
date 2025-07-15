@@ -1,12 +1,20 @@
-import axios from 'axios';
-
-// Create axios instance with base configuration
+import axios from 'axios';  // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1',
-  timeout: 10000,
+  baseURL: 'http://localhost:3000/api/v1',
+  timeout: 15000, // Increased timeout for development
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Add request/response logging
+api.interceptors.request.use(request => {
+  console.log('Starting API Request:', {
+    url: request.url,
+    method: request.method,
+    headers: request.headers
+  });
+  return request;
 });
 
 // Request interceptor to add auth token
@@ -19,54 +27,54 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
-);
-
-// Response interceptor to handle token refresh
+);  // Response interceptor to handle token refresh
 api.interceptors.response.use(
   (response) => {
+    console.log('API Response Success:', {
+      url: response.config.url,
+      status: response.status,
+      data: response.data
+    });
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
+    console.error('API Response Error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      message: error.message,
+      response: error.response?.data
+    });
 
-    // If the error status is 401 and there is no originalRequest._retry flag,
-    // it means the token has expired and we need to refresh it
+    const originalRequest = error.config;
+    
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        
-        if (refreshToken) {
-          const response = await axios.post(
-            `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'}/auth/staff/refresh`,
-            { refresh_token: refreshToken }
-          );
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }        const response = await axios.post(
+          'http://localhost:3000/api/v1/auth/staff/refresh',
+          { refresh_token: refreshToken }
+        );
 
-          const { access_token, refresh_token: newRefreshToken, expires_at } = response.data;
+        const { access_token, refresh_token } = response.data;
+        localStorage.setItem('access_token', access_token);
+        localStorage.setItem('refresh_token', refresh_token);
 
-          // Update stored tokens
-          localStorage.setItem('access_token', access_token);
-          localStorage.setItem('refresh_token', newRefreshToken);
-          localStorage.setItem('expires_at', expires_at.toString());
+        api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+        originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
 
-          // Update the authorization header and retry the original request
-          api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-          originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
-
-          return api(originalRequest);
-        }
+        return api(originalRequest);
       } catch (refreshError) {
-        // Refresh token is invalid, redirect to login
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('expires_at');
-        
-        // Redirect to login page
-        window.location.href = '/';
+        console.error('Token refresh failed:', refreshError);
+        // Clear auth state and redirect to login
+        localStorage.clear();
+        window.location.href = '/login';
         return Promise.reject(refreshError);
       }
     }

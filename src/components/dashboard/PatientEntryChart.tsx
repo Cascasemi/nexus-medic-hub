@@ -2,17 +2,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-const data = [
-  { day: "Mon", count: 12 },
-  { day: "Tue", count: 18 },
-  { day: "Wed", count: 15 },
-  { day: "Thu", count: 22 },
-  { day: "Fri", count: 25 },
-  { day: "Sat", count: 14 },
-  { day: "Sun", count: 10 },
-];
+interface PatientEntry {
+  day: string;
+  count: number;
+}
 
-export const PatientEntryChart = () => {
+interface PatientEntryChartProps {
+  data?: PatientEntry[];
+}
+
+export const PatientEntryChart = ({ data = [] }: PatientEntryChartProps) => {
   return (
     <Card>
       <CardHeader>

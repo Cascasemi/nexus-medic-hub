@@ -10,18 +10,10 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-medical-100">
-        <div className="animate-pulse text-medical-500 flex flex-col items-center">
-          <ActivitySquare size={40} />
-          <p className="mt-4 font-medium">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // If you have a different way to check loading state, update here.
+  // Otherwise, you can remove the loading check entirely.
 
   if (!isAuthenticated) {
     return <Navigate to="/" />;

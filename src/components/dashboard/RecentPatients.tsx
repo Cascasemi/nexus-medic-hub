@@ -1,63 +1,13 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import type { Patient } from "@/types/patient";
 
-type Status = "stable" | "critical" | "improving" | "observation";
-
-interface Patient {
-  id: string;
-  name: string;
-  age: number;
-  admissionDate: Date;
-  status: Status;
-  diagnosis: string;
+interface RecentPatientsProps {
+  patients: Patient[];
 }
 
-const patients: Patient[] = [
-  {
-    id: "P-3821",
-    name: "Michael Chen",
-    age: 42,
-    admissionDate: new Date(2023, 6, 12),
-    status: "stable",
-    diagnosis: "Hypertension"
-  },
-  {
-    id: "P-4532",
-    name: "Sarah Johnson",
-    age: 35,
-    admissionDate: new Date(2023, 6, 13),
-    status: "improving",
-    diagnosis: "Post-surgery recovery"
-  },
-  {
-    id: "P-2198",
-    name: "Robert Garcia",
-    age: 68,
-    admissionDate: new Date(2023, 6, 14),
-    status: "critical",
-    diagnosis: "Pneumonia"
-  },
-  {
-    id: "P-5670",
-    name: "Emily Wilson",
-    age: 29,
-    admissionDate: new Date(2023, 6, 15),
-    status: "observation",
-    diagnosis: "Migraine"
-  },
-  {
-    id: "P-1087",
-    name: "David Thompson",
-    age: 54,
-    admissionDate: new Date(2023, 6, 16),
-    status: "stable",
-    diagnosis: "Diabetes follow-up"
-  }
-];
-
-const getStatusColor = (status: Status) => {
+const getStatusColor = (status: Patient["current_status"]) => {
   switch (status) {
     case "stable":
       return "bg-green-100 text-green-800";
@@ -72,7 +22,7 @@ const getStatusColor = (status: Status) => {
   }
 };
 
-export const RecentPatients = () => {
+export const RecentPatients = ({ patients }: RecentPatientsProps) => {
   return (
     <Card>
       <CardHeader>
@@ -93,19 +43,19 @@ export const RecentPatients = () => {
             </thead>
             <tbody>
               {patients.map((patient) => (
-                <tr key={patient.id} className="border-b border-muted patient-row">
-                  <td className="px-4 py-3 text-sm font-medium">{patient.id}</td>
-                  <td className="px-4 py-3 text-sm">{patient.name}</td>
+                <tr key={patient.patient_id} className="border-b border-muted patient-row">
+                  <td className="px-4 py-3 text-sm font-medium">{patient.patient_id}</td>
+                  <td className="px-4 py-3 text-sm">{`${patient.first_name} ${patient.last_name}`}</td>
                   <td className="px-4 py-3 text-sm">{patient.age}</td>
                   <td className="px-4 py-3 text-sm">
-                    {format(patient.admissionDate, "MMM d, yyyy")}
+                    {format(new Date(patient.admission_date), "MMM d, yyyy")}
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    <Badge variant="outline" className={getStatusColor(patient.status)}>
-                      {patient.status}
+                    <Badge variant="secondary" className={patient.current_status ? getStatusColor(patient.current_status) : ""}>
+                      {patient.current_status || "Unknown"}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-sm">{patient.diagnosis}</td>
+                  <td className="px-4 py-3 text-sm">{patient.current_diagnosis || "No diagnosis"}</td>
                 </tr>
               ))}
             </tbody>

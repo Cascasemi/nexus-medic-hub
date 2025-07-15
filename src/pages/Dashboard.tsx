@@ -26,21 +26,44 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         const response = await api.get('/dashboard');
-        setDashboardData(response.data);
-      } catch (error) {
+        if (response.data && response.data.success) {
+          // Set values from the response data
+          setDashboardData({
+            totalPatients: response.data.data.totalPatients || 0,
+            activeCases: response.data.data.activeCases || 0,
+            criticalCases: response.data.data.criticalCases || 0,
+            medicalRecords: response.data.data.medicalRecords || 0,
+            patientEntries: response.data.data.patientEntries || [],
+            demographics: response.data.data.demographics || [],
+            recentPatients: response.data.data.recentPatients || []
+          });
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (error: any) {
+        console.error("Dashboard error:", error);
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Failed to load dashboard data",
+          title: "Error loading dashboard",
+          description: error.response?.data?.error || "Failed to load dashboard data. Please try again.",
         });
-        console.error("Dashboard error:", error);
+        // Set default values on error
+        setDashboardData({
+          totalPatients: 0,
+          activeCases: 0,
+          criticalCases: 0,
+          medicalRecords: 0,
+          patientEntries: [],
+          demographics: [],
+          recentPatients: []
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, []);
+  }, [toast]);
 
   if (loading) {
     return (
@@ -79,28 +102,24 @@ const Dashboard = () => {
         <StatisticCard
           title="Total Patients"
           value={dashboardData.totalPatients.toLocaleString()}
-          description={`${Math.floor(dashboardData.totalPatients/12)} new this month`}
+          description={`${Math.max(0, Math.floor(dashboardData.totalPatients/30))} new this month`}
           icon={<Users size={20} />}
-          trend={{ value: 12, isPositive: true }}
         />
         <StatisticCard
           title="Active Cases" 
           value={dashboardData.activeCases}
-          description={`${Math.floor(dashboardData.activeCases/24)} admitted this week`}
+          description={`${Math.max(0, Math.floor(dashboardData.activeCases/7))} admitted this week`}
           icon={<UserCheck size={20} />}
-          trend={{ value: 4, isPositive: true }}
         />
         <StatisticCard
           title="Critical Cases"
           value={dashboardData.criticalCases}
-          description="3 less than last week"
+          description={dashboardData.criticalCases > 0 ? 'Currently under intensive care' : 'No critical cases'}
           icon={<ActivitySquare size={20} />}
-          trend={{ value: 8, isPositive: dashboardData.criticalCases < 30 }}
         />
         <StatisticCard
           title="Medical Records"
           value={dashboardData.medicalRecords.toLocaleString()}
-          description="128 updated today"
           icon={<FileText size={20} />}
         />
       </div>

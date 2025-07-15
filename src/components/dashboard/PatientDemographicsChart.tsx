@@ -2,15 +2,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
-const data = [
-  { name: "0-18", value: 24, color: "#c2dfff" },
-  { name: "19-35", value: 30, color: "#75a6f0" }, 
-  { name: "36-50", value: 45, color: "#1e58c8" },
-  { name: "51-65", value: 35, color: "#0a4099" },
-  { name: "65+", value: 25, color: "#072e70" }
-];
+interface DemographicData {
+  name: string;
+  value: number;
+  color: string;
+}
 
-export const PatientDemographicsChart = () => {
+interface PatientDemographicsChartProps {
+  data?: DemographicData[];
+}
+
+export const PatientDemographicsChart = ({ data = [] }: PatientDemographicsChartProps) => {
   return (
     <Card>
       <CardHeader>
