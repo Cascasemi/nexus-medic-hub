@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon } from 'lucide-react';
+import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon, ChevronDown, ChevronRight } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:3000/api/v1';
 
@@ -19,6 +19,7 @@ const FolderView = () => {
   const [tests, setTests] = useState([]);
   const [diagnoses, setDiagnoses] = useState([]);
   const [showTests, setShowTests] = useState(false);
+  const [showAttachments, setShowAttachments] = useState(false);
 
   useEffect(() => {
     if (folder_id) {
@@ -132,22 +133,6 @@ const FolderView = () => {
           )}
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Attachments</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {attachments.length === 0 ? (
-            <div>No attachments available.</div>
-          ) : (
-            <ul className="list-disc pl-5">
-              {attachments.map((att) => (
-                <li key={att.id}>{att.file_name}</li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
       {/* Test Section */}
       <Card>
         <CardHeader
@@ -156,6 +141,9 @@ const FolderView = () => {
         >
           <FileText className="h-5 w-5 text-medical-500" />
           <CardTitle className="text-lg">Test</CardTitle>
+          <span className="ml-auto flex items-center">
+            {showTests ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </span>
         </CardHeader>
         {showTests && (
           <CardContent>
@@ -175,6 +163,46 @@ const FolderView = () => {
                     )}
                     {test.completed_date && (
                       <div className="text-sm">Completed: {formatDate(test.completed_date)}</div>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+      {/* Attachments Section */}
+      <Card>
+        <CardHeader
+          className="flex flex-row items-center gap-2 cursor-pointer hover:bg-gray-50"
+          onClick={() => setShowAttachments((prev) => !prev)}
+        >
+          <FileText className="h-5 w-5 text-medical-500" />
+          <CardTitle className="text-lg">Attachments</CardTitle>
+          <span className="ml-auto flex items-center">
+            {showAttachments ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </span>
+        </CardHeader>
+        {showAttachments && (
+          <CardContent>
+            {attachments.length === 0 ? (
+              <div>No attachments available.</div>
+            ) : (
+              <div className="space-y-4">
+                {attachments.map((att) => (
+                  <Card key={att.attachment_id} className="border p-3">
+                    <div className="font-semibold">{att.file_name || 'Untitled File'}</div>
+                    <div className="text-sm text-muted-foreground">Type: {att.file_type || 'N/A'}</div>
+                    <div className="text-sm">Uploaded By: {att.uploaded_by || 'N/A'}</div>
+                    <div className="text-sm">Created: {att.created_at ? formatDate(att.created_at) : 'N/A'}</div>
+                    {att.file_size && (
+                      <div className="text-sm">Size: {att.file_size} bytes</div>
+                    )}
+                    {att.description && (
+                      <div className="text-sm mt-2">Description: {att.description}</div>
+                    )}
+                    {att.file_path && (
+                      <div className="text-sm mt-2">Path: {att.file_path}</div>
                     )}
                   </Card>
                 ))}
