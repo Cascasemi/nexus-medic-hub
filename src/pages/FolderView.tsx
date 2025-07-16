@@ -20,6 +20,7 @@ const FolderView = () => {
   const [diagnoses, setDiagnoses] = useState([]);
   const [showTests, setShowTests] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
+  const [showDiagnoses, setShowDiagnoses] = useState(false);
 
   useEffect(() => {
     if (folder_id) {
@@ -203,6 +204,43 @@ const FolderView = () => {
                     )}
                     {att.file_path && (
                       <div className="text-sm mt-2">Path: {att.file_path}</div>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+      {/* Diagnoses Section */}
+      <Card>
+        <CardHeader
+          className="flex flex-row items-center gap-2 cursor-pointer hover:bg-gray-50"
+          onClick={() => setShowDiagnoses((prev) => !prev)}
+        >
+          <FileText className="h-5 w-5 text-medical-500" />
+          <CardTitle className="text-lg">Diagnoses</CardTitle>
+          <span className="ml-auto flex items-center">
+            {showDiagnoses ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </span>
+        </CardHeader>
+        {showDiagnoses && (
+          <CardContent>
+            {diagnoses.length === 0 ? (
+              <div>No diagnoses available.</div>
+            ) : (
+              <div className="space-y-4">
+                {diagnoses.map((diag) => (
+                  <Card key={diag.diagnosis_id} className="border p-3">
+                    <div className="font-semibold">{diag.diagnosis_name || 'Untitled Diagnosis'}</div>
+                    <div className="text-sm text-muted-foreground">Code: {diag.diagnosis_code || 'N/A'}</div>
+                    <div className="text-sm">Date: {diag.diagnosis_date ? formatDate(diag.diagnosis_date) : 'N/A'}</div>
+                    <div className="text-sm">Created By: {diag.created_by || 'N/A'}</div>
+                    <div className="text-sm">Created: {diag.created_at ? formatDate(diag.created_at) : 'N/A'}</div>
+                    <div className="text-sm">Severity: {diag.severity || 'N/A'}</div>
+                    <div className="text-sm">Status: {diag.status || 'active'}</div>
+                    {diag.diagnosis_description && (
+                      <div className="text-sm mt-2">Description: {diag.diagnosis_description}</div>
                     )}
                   </Card>
                 ))}
