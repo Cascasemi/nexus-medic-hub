@@ -20,11 +20,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = 'http://localhost:3000/api/v1';
 
 const Folders = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [folders, setFolders] = useState([]);
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -317,10 +319,7 @@ const Folders = () => {
                     variant="outline" 
                     size="sm" 
                     className="w-full mt-4 hover:bg-medical-50"
-                    onClick={() => {
-                      // Navigate to folder details
-                      window.location.href = `/folders/${folder.folder_id}`;
-                    }}
+                    onClick={() => navigate(`/folders/${folder.folder_id}`)}
                   >
                     Open Folder
                   </Button>
