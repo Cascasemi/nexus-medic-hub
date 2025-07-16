@@ -1,7 +1,8 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { FolderOpen, Search, Plus, User, Calendar, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,133 +18,128 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
-interface Patient {
-  patient_id: string;
-  first_name: string;
-  last_name: string;
-  date_of_birth: string;
-  gender: string;
-  phone: string;
-  email: string;
-}
-
-interface Folder {
-  folder_id: string;
-  patient_id: string;
-  created_by: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  patient?: Patient;
-}
+const API_BASE_URL = 'http://localhost:3000/api/v1';
 
 const Folders = () => {
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const { user } = useAuth();
+  const [folders, setFolders] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [selectedPatientId, setSelectedPatientId] = useState("");
-  const [createdBy, setCreatedBy] = useState("");
-  const [status, setStatus] = useState("active");
-  const [creating, setCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState('');
+  const [folderStatus, setFolderStatus] = useState('active');
+  const [error, setError] = useState('');
 
-  // Fetch folders
-  const fetchFolders = async () => {
-    try {
-      const response = await fetch('/api/v1/folders');
-      if (response.ok) {
-        const data = await response.json();
-        setFolders(data.data || []);
-      }
-    } catch (error) {
-      console.error('Error fetching folders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetchPatients();
+    fetchFolders();
+  }, []);
 
-  // Fetch patients for dropdown
   const fetchPatients = async () => {
     try {
-      const response = await fetch('/api/v1/patients');
-      if (response.ok) {
-        const data = await response.json();
-        setPatients(data.data || []);
+      const response = await fetch(`${API_BASE_URL}/patients`);
+      const data = await response.json();
+      if (data.success) {
+        setPatients(data.data);
+      } else {
+        setError('Failed to fetch patients');
       }
-    } catch (error) {
-      console.error('Error fetching patients:', error);
+    } catch (err) {
+      setError('Error fetching patients');
+      console.error('Error fetching patients:', err);
     }
   };
 
-  // Create new folder
+  const fetchFolders = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_BASE_URL}/folders`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setFolders(data.data || []);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching folders:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const createFolder = async () => {
-    if (!selectedPatientId || !createdBy) {
-      alert('Please select a patient and enter creator name');
+    if (!selectedPatient) {
+      setError('Please select a patient');
       return;
     }
-
-    setCreating(true);
+    if (!user || !user.id) {
+      setError('Staff ID not found. Please try again.');
+      return;
+    }
     try {
-      const response = await fetch('/api/v1/folders', {
+      setIsLoading(true);
+      const response = await fetch(`${API_BASE_URL}/folders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          patient_id: selectedPatientId,
-          created_by: createdBy,
-          status: status,
+          patient_id: selectedPatient,
+          created_by: user.id, // Send staff code (e.g., NMHS0001) as required by DB
+          status: folderStatus
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
+      if (data.success) {
         setFolders(prev => [...prev, data.data]);
         setIsCreateDialogOpen(false);
-        setSelectedPatientId("");
-        setCreatedBy("");
-        setStatus("active");
+        setSelectedPatient('');
+        setFolderStatus('active');
+        setError('');
       } else {
-        const error = await response.json();
-        alert(`Error creating folder: ${error.error}`);
+        setError(data.error || 'Failed to create folder');
       }
-    } catch (error) {
-      console.error('Error creating folder:', error);
-      alert('Error creating folder');
+    } catch (err) {
+      setError('Error creating folder');
+      console.error('Error creating folder:', err);
     } finally {
-      setCreating(false);
+      setIsLoading(false);
     }
   };
 
-  // Filter folders based on search
   const filteredFolders = folders.filter(folder => {
     const patient = patients.find(p => p.patient_id === folder.patient_id);
     if (!patient) return false;
-    const patientName = `${patient.first_name} ${patient.last_name}`.toLowerCase();
-    return patientName.includes(searchTerm.toLowerCase()) || 
-           folder.folder_id.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      patient.first_name.toLowerCase().includes(searchLower) ||
+      patient.last_name.toLowerCase().includes(searchLower) ||
+      folder.patient_id.toLowerCase().includes(searchLower)
+    );
   });
 
-  useEffect(() => {
-    fetchFolders();
-    fetchPatients();
-  }, []);
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
-  if (loading) {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-medical-500 mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Loading folders...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'inactive': return 'bg-gray-100 text-gray-800';
+      case 'archived': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -176,78 +172,87 @@ const Folders = () => {
               <DialogHeader>
                 <DialogTitle>Create New Patient Folder</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="patient" className="text-right">
-                    Patient
-                  </Label>
-                  <div className="col-span-3">
-                    <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a patient" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {patients.map((patient) => (
-                          <SelectItem key={patient.patient_id} value={patient.patient_id}>
-                            {patient.first_name} {patient.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              <div className="space-y-4 py-4">
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                    <p className="text-sm text-red-600">{error}</p>
                   </div>
+                )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="patient">Select Patient</Label>
+                  <Select 
+                    value={selectedPatient} 
+                    onValueChange={setSelectedPatient}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a patient" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {patients.map((patient) => (
+                        <SelectItem 
+                          key={patient.patient_id} 
+                          value={patient.patient_id}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <User className="h-4 w-4" />
+                            <span>{patient.first_name} {patient.last_name}</span>
+                            <span className="text-muted-foreground text-sm">
+                              {patient.patient_id}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="created_by" className="text-right">
-                    Created By
-                  </Label>
-                  <Input
-                    id="created_by"
-                    value={createdBy}
-                    onChange={(e) => setCreatedBy(e.target.value)}
-                    className="col-span-3"
-                    placeholder="Enter your name"
-                  />
+
+                <div className="space-y-2">
+                  <Label htmlFor="status">Folder Status</Label>
+                  <Select 
+                    value={folderStatus} 
+                    onValueChange={setFolderStatus}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="archived">Archived</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="status" className="text-right">
-                    Status
-                  </Label>
-                  <div className="col-span-3">
-                    <Select value={status} onValueChange={setStatus}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                        <SelectItem value="archived">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCreateDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={createFolder}
+                    disabled={isLoading || !selectedPatient}
+                    className="bg-medical-500 hover:bg-medical-600"
+                  >
+                    {isLoading ? 'Creating...' : 'Create Folder'}
+                  </Button>
                 </div>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsCreateDialogOpen(false)}
-                  disabled={creating}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={createFolder}
-                  disabled={creating || !selectedPatientId || !createdBy}
-                  className="bg-medical-500 hover:bg-medical-600"
-                >
-                  {creating ? "Creating..." : "Create Folder"}
-                </Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
       </div>
 
-      {folders.length === 0 ? (
+      {isLoading && folders.length === 0 ? (
+        <div className="rounded-lg border bg-card text-card-foreground shadow">
+          <div className="p-6 flex flex-col items-center justify-center min-h-[400px] text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-medical-500"></div>
+            <p className="mt-4 text-muted-foreground">Loading folders...</p>
+          </div>
+        </div>
+      ) : folders.length === 0 ? (
         <div className="rounded-lg border bg-card text-card-foreground shadow">
           <div className="p-6 flex flex-col items-center justify-center min-h-[400px] text-center">
             <div className="rounded-full bg-medical-100 p-4">
@@ -255,15 +260,14 @@ const Folders = () => {
             </div>
             <h3 className="mt-4 text-xl font-semibold">No Patient Folders Yet</h3>
             <p className="mt-2 text-muted-foreground max-w-sm">
-              Create your first patient folder to organize medical records, test results, and treatment plans.
+              Create your first patient folder to organize and access patient records.
             </p>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="mt-6 bg-medical-500 hover:bg-medical-600">
-                  Create First Folder
-                </Button>
-              </DialogTrigger>
-            </Dialog>
+            <Button 
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="mt-6 bg-medical-500 hover:bg-medical-600"
+            >
+              Create First Folder
+            </Button>
           </div>
         </div>
       ) : (
@@ -271,7 +275,7 @@ const Folders = () => {
           {filteredFolders.map((folder) => {
             const patient = patients.find(p => p.patient_id === folder.patient_id);
             return (
-              <Card key={folder.folder_id} className="cursor-pointer hover:shadow-lg transition-shadow">
+              <Card key={folder.folder_id} className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
@@ -282,37 +286,44 @@ const Folders = () => {
                         <CardTitle className="text-lg">
                           {patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown Patient'}
                         </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          ID: {folder.folder_id.slice(0, 8)}...
-                        </p>
+                        <CardDescription>
+                          {folder.patient_id}
+                        </CardDescription>
                       </div>
                     </div>
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      folder.status === 'active' ? 'bg-green-100 text-green-800' :
-                      folder.status === 'inactive' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
+                    <Badge className={getStatusColor(folder.status)}>
                       {folder.status}
-                    </div>
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                      <User className="h-4 w-4" />
-                      <span>Created by: {folder.created_by}</span>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Created: {formatDate(folder.created_at)}
                     </div>
-                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span>Created: {new Date(folder.created_at).toLocaleDateString()}</span>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Folder ID: {folder.folder_id}
                     </div>
                     {patient && (
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <FileText className="h-4 w-4" />
-                        <span>DOB: {new Date(patient.date_of_birth).toLocaleDateString()}</span>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <User className="h-4 w-4 mr-2" />
+                        DOB: {formatDate(patient.date_of_birth)}
                       </div>
                     )}
                   </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full mt-4 hover:bg-medical-50"
+                    onClick={() => {
+                      // Navigate to folder details
+                      window.location.href = `/folders/${folder.folder_id}`;
+                    }}
+                  >
+                    Open Folder
+                  </Button>
                 </CardContent>
               </Card>
             );
@@ -320,13 +331,13 @@ const Folders = () => {
         </div>
       )}
 
-      {filteredFolders.length === 0 && folders.length > 0 && (
+      {filteredFolders.length === 0 && folders.length > 0 && searchTerm && (
         <div className="rounded-lg border bg-card text-card-foreground shadow">
           <div className="p-6 flex flex-col items-center justify-center min-h-[200px] text-center">
-            <Search className="h-12 w-12 text-muted-foreground mb-4" />
+            <Search className="h-8 w-8 text-muted-foreground mb-2" />
             <h3 className="text-lg font-semibold">No folders found</h3>
             <p className="text-muted-foreground">
-              No folders match your search criteria. Try a different search term.
+              No folders match your search for "{searchTerm}"
             </p>
           </div>
         </div>
