@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon, ChevronDown, ChevronRight } from 'lucide-react';
+import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon, ChevronDown, ChevronRight, ClipboardList } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:3000/api/v1';
 
@@ -21,6 +21,7 @@ const FolderView = () => {
   const [showTests, setShowTests] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
   const [showDiagnoses, setShowDiagnoses] = useState(false);
+  const [showTreatmentPlans, setShowTreatmentPlans] = useState(false);
 
   useEffect(() => {
     if (folder_id) {
@@ -241,6 +242,43 @@ const FolderView = () => {
                     <div className="text-sm">Status: {diag.status || 'active'}</div>
                     {diag.diagnosis_description && (
                       <div className="text-sm mt-2">Description: {diag.diagnosis_description}</div>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+      {/* Treatment Plan Section */}
+      <Card>
+        <CardHeader
+          className="flex flex-row items-center gap-2 cursor-pointer hover:bg-gray-50"
+          onClick={() => setShowTreatmentPlans((prev) => !prev)}
+        >
+          <ClipboardList className="h-5 w-5 text-medical-500" />
+          <CardTitle className="text-lg">Treatment Plans</CardTitle>
+          <span className="ml-auto flex items-center">
+            {showTreatmentPlans ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </span>
+        </CardHeader>
+        {showTreatmentPlans && (
+          <CardContent>
+            {Array.isArray(folder?.treatment_plans) && folder.treatment_plans.length === 0 ? (
+              <div>No treatment plans available.</div>
+            ) : (
+              <div className="space-y-4">
+                {(folder?.treatment_plans || []).map((plan) => (
+                  <Card key={plan.plan_id} className="border p-3">
+                    <div className="font-semibold">{plan.plan_name || 'Untitled Plan'}</div>
+                    <div className="text-sm text-muted-foreground">Status: {plan.status || 'active'}</div>
+                    <div className="text-sm">Priority: {plan.priority || 'medium'}</div>
+                    <div className="text-sm">Start Date: {plan.start_date ? formatDate(plan.start_date) : 'N/A'}</div>
+                    <div className="text-sm">End Date: {plan.end_date ? formatDate(plan.end_date) : 'N/A'}</div>
+                    <div className="text-sm">Created By: {plan.created_by || 'N/A'}</div>
+                    <div className="text-sm">Created: {plan.created_at ? formatDate(plan.created_at) : 'N/A'}</div>
+                    {plan.plan_description && (
+                      <div className="text-sm mt-2">Description: {plan.plan_description}</div>
                     )}
                   </Card>
                 ))}
