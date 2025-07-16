@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, User, FileText, ArrowLeft } from 'lucide-react';
+import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:3000/api/v1';
 
@@ -18,6 +18,7 @@ const FolderView = () => {
   const [attachments, setAttachments] = useState([]);
   const [tests, setTests] = useState([]);
   const [diagnoses, setDiagnoses] = useState([]);
+  const [showTests, setShowTests] = useState(false);
 
   useEffect(() => {
     if (folder_id) {
@@ -146,6 +147,41 @@ const FolderView = () => {
             </ul>
           )}
         </CardContent>
+      </Card>
+      {/* Test Section */}
+      <Card>
+        <CardHeader
+          className="flex flex-row items-center gap-2 cursor-pointer hover:bg-gray-50"
+          onClick={() => setShowTests((prev) => !prev)}
+        >
+          <FileText className="h-5 w-5 text-medical-500" />
+          <CardTitle className="text-lg">Test</CardTitle>
+        </CardHeader>
+        {showTests && (
+          <CardContent>
+            {tests.length === 0 ? (
+              <div>No test information available.</div>
+            ) : (
+              <div className="space-y-4">
+                {tests.map((test) => (
+                  <Card key={test.test_id} className="border p-3">
+                    <div className="font-semibold">{test.test_name || 'Untitled Test'}</div>
+                    <div className="text-sm text-muted-foreground">Type: {test.test_type || 'N/A'}</div>
+                    <div className="text-sm">Ordered Date: {test.ordered_date ? formatDate(test.ordered_date) : 'N/A'}</div>
+                    <div className="text-sm">Ordered By: {test.ordered_by || 'N/A'}</div>
+                    <div className="text-sm">Status: {test.test_status || 'N/A'}</div>
+                    {test.test_description && (
+                      <div className="text-sm mt-2">Description: {test.test_description}</div>
+                    )}
+                    {test.completed_date && (
+                      <div className="text-sm">Completed: {formatDate(test.completed_date)}</div>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        )}
       </Card>
       {/* Add similar cards for tests and diagnoses if needed */}
     </div>
