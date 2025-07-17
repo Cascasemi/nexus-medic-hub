@@ -1,9 +1,40 @@
 
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Search, Plus } from "lucide-react";
+import { MessageSquare, Search, Plus, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+const API_BASE_URL = 'http://localhost:3000/api/v1';
 
 const Responses = () => {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [openReportId, setOpenReportId] = useState(null);
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const fetchReports = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/reports`);
+      const data = await res.json();
+      if (data.success) {
+        setReports(data.data || []);
+      } else {
+        setError(data.error || 'Failed to fetch reports');
+      }
+    } catch (err) {
+      setError('Error fetching reports');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
@@ -29,17 +60,47 @@ const Responses = () => {
         </div>
       </div>
 
-      <div className="rounded-lg border bg-card text-card-foreground shadow">
-        <div className="p-6 flex flex-col items-center justify-center min-h-[400px] text-center">
-          <div className="rounded-full bg-medical-100 p-4">
-            <MessageSquare className="h-12 w-12 text-medical-500" />
-          </div>
-          <h3 className="mt-4 text-xl font-semibold">Communications Center</h3>
-          <p className="mt-2 text-muted-foreground max-w-sm">
-            View and manage responses from patients, schedule follow-ups, and coordinate with other healthcare providers.
-          </p>
-          <Button className="mt-6 bg-medical-500 hover:bg-medical-600">Access Communications</Button>
-        </div>
+      <div className="rounded-lg border bg-card text-card-foreground shadow p-6">
+        <h2 className="text-xl font-semibold mb-4">Reports</h2>
+        {loading ? (
+          <div>Loading reports...</div>
+        ) : error ? (
+          <div className="text-red-500">{error}</div>
+        ) : reports.length === 0 ? (
+          <div>No reports found.</div>
+        ) : (
+          <ul className="space-y-4">
+            {reports.map((report) => (
+              <li key={report.report_id} className="border rounded p-4 relative">
+                <div className="font-semibold">{report.title || 'Untitled Report'}</div>
+                <div className="text-sm text-muted-foreground mb-2">{report.created_at ? new Date(report.created_at).toLocaleString() : ''}</div>
+                <Button
+                  className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1"
+                  onClick={() => setOpenReportId(report.report_id)}
+                >
+                  <Eye className="h-4 w-4 mr-1 inline" /> View Report
+                </Button>
+                {/* Report Popup */}
+                {openReportId === report.report_id && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                    <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6 relative">
+                      <button
+                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                        onClick={() => setOpenReportId(null)}
+                        aria-label="Close"
+                      >
+                        ×
+                      </button>
+                      <h3 className="text-lg font-bold mb-2">{report.title || 'Report'}</h3>
+                      <div className="text-sm text-muted-foreground mb-2">{report.created_at ? new Date(report.created_at).toLocaleString() : ''}</div>
+                      <div className="whitespace-pre-wrap text-base">{report.content || 'No content.'}</div>
+                    </div>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
