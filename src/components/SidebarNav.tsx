@@ -45,9 +45,10 @@ export const SidebarNav = () => {
   return (
     <div 
       className={cn(
-        "h-screen bg-sidebar flex flex-col transition-all duration-300 border-r border-sidebar-border fixed", 
+        "h-screen bg-sidebar flex flex-col transition-all duration-300 border-r border-sidebar-border fixed z-50", 
         collapsed ? "w-16" : "w-64"
       )}
+      style={{ backgroundColor: '#1a202c' }} // ensure opaque background
     >
       <div className="flex items-center p-4 border-b border-sidebar-border">
         <ActivitySquare className="text-white mr-2" size={collapsed ? 24 : 28} />

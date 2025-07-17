@@ -92,13 +92,7 @@ const Responses = () => {
                       >
                         ×
                       </button>
-                      <h3 className="text-lg font-bold mb-2">Report Details</h3>
-                      <div className="text-sm text-muted-foreground mb-2">{report.created_at ? new Date(report.created_at).toLocaleString() : ''}</div>
-                      <div className="mb-2"><b>Status:</b> {report.status || 'Not Responded'}</div>
-                      <div className="mb-2"><b>Confidential:</b> {report.isconfidential ? 'Yes' : 'No'}</div>
-                      <div className="mb-2"><b>Created By:</b> {report.created_by || 'N/A'}</div>
-                      <div className="mb-2"><b>Patient ID:</b> {report.patient_id || 'N/A'}</div>
-                      <div className="mb-2"><b>Summary:</b></div>
+                      <h3 className="text-lg font-bold mb-2">Report</h3>
                       <div className="whitespace-pre-wrap text-base">{report.report_summary || 'No summary.'}</div>
                     </div>
                   </div>
