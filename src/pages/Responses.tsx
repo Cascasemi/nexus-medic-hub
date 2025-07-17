@@ -1,9 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Search, Plus, Eye } from "lucide-react";
+import { MessageSquare, Search, Plus, Eye, Stethoscope } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from '@/contexts/AuthContext';
 
 const API_BASE_URL = 'http://localhost:3000/api/v1';
 
@@ -12,6 +16,18 @@ const Responses = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [openReportId, setOpenReportId] = useState(null);
+  const [showDiagnosisForm, setShowDiagnosisForm] = useState(false);
+  const [diagnosisForm, setDiagnosisForm] = useState({
+    diagnosis_name: '',
+    diagnosis_date: '',
+    diagnosis_code: '',
+    diagnosis_description: '',
+    severity: '',
+    status: 'active'
+  });
+  const [diagnosisLoading, setDiagnosisLoading] = useState(false);
+  const [diagnosisError, setDiagnosisError] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchReports();
@@ -32,6 +48,46 @@ const Responses = () => {
       setError('Error fetching reports');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createDiagnosis = async (patientId) => {
+    setDiagnosisLoading(true);
+    setDiagnosisError('');
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/patients/${patientId}/diagnoses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...diagnosisForm,
+          created_by: user?.id
+        }),
+      });
+
+      const data = await res.json();
+      
+      if (data.success) {
+        // Reset form and close
+        setDiagnosisForm({
+          diagnosis_name: '',
+          diagnosis_date: '',
+          diagnosis_code: '',
+          diagnosis_description: '',
+          severity: '',
+          status: 'active'
+        });
+        setShowDiagnosisForm(false);
+        alert('Diagnosis created successfully!');
+      } else {
+        setDiagnosisError(data.error || 'Failed to create diagnosis');
+      }
+    } catch (err) {
+      setDiagnosisError('Error creating diagnosis');
+    } finally {
+      setDiagnosisLoading(false);
     }
   };
 
