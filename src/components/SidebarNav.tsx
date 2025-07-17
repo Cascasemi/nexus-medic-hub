@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { ActivitySquare, ChevronLeft, ChevronRight, FolderOpen, Home, LogOut, Settings, UserRound, MessageSquare, Video, Users, UserCog } from "lucide-react";
+import { ActivitySquare, ChevronLeft, ChevronRight, FolderOpen, Home, LogOut, Settings, UserRound, MessageSquare, Video, Users, UserCog, FlaskConical } from "lucide-react";
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -80,6 +80,15 @@ export const SidebarNav = () => {
             to="/folders" 
             isCollapsed={collapsed} 
           />
+          {/* Test sidebar item, only for Lab Technician or admin */}
+          {user && (user.role === 'Lab Technician' || user.role === 'admin') && (
+            <SidebarItem 
+              icon={<FlaskConical />} 
+              title="Tests" 
+              to="/tests" 
+              isCollapsed={collapsed} 
+            />
+          )}
           <SidebarItem 
             icon={<MessageSquare />} 
             title="Response" 

@@ -15,6 +15,7 @@ import Responses from "@/pages/Responses";
 import NotFound from "@/pages/NotFound";
 import ManageStaff from "@/pages/ManageStaff";
 import FolderView from "@/pages/FolderView";
+import Test from "@/pages/Test";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => {
                 <Route path="/patients" element={<Patients />} />
                 <Route path="/folders" element={<Folders />} />
                 <Route path="/folders/:folder_id" element={<FolderView />} />
+                <Route path="/tests" element={<Test />} />
                 <Route path="/responses" element={<Responses />} />
                 <Route 
                   path="/manage-staff" 
