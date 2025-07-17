@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon, ChevronDown, ChevronRight, ClipboardList } from 'lucide-react';
+import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon, ChevronDown, ChevronRight, ClipboardList, MoreVertical, Eye } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:3000/api/v1';
 
@@ -22,6 +22,12 @@ const FolderView = () => {
   const [showAttachments, setShowAttachments] = useState(false);
   const [showDiagnoses, setShowDiagnoses] = useState(false);
   const [showTreatmentPlans, setShowTreatmentPlans] = useState(false);
+  const [openActivitiesPlanId, setOpenActivitiesPlanId] = useState(null);
+  const [activities, setActivities] = useState({}); // { [plan_id]: [activity, ...] }
+  const [loadingActivities, setLoadingActivities] = useState({}); // { [plan_id]: boolean }
+  const [openTestResultsId, setOpenTestResultsId] = useState(null);
+  const [testResults, setTestResults] = useState({}); // { [test_id]: [result, ...] }
+  const [loadingTestResults, setLoadingTestResults] = useState({}); // { [test_id]: boolean }
 
   useEffect(() => {
     if (folder_id) {
@@ -50,6 +56,38 @@ const FolderView = () => {
       setError('Error fetching folder');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchActivities = async (plan_id) => {
+    if (activities[plan_id]) return; // Already fetched
+    setLoadingActivities((prev) => ({ ...prev, [plan_id]: true }));
+    try {
+      const res = await fetch(`${API_BASE_URL}/treatment-plans/${plan_id}/activities`);
+      const data = await res.json();
+      if (data.success) {
+        setActivities((prev) => ({ ...prev, [plan_id]: data.data || [] }));
+      }
+    } catch (err) {
+      setActivities((prev) => ({ ...prev, [plan_id]: [] }));
+    } finally {
+      setLoadingActivities((prev) => ({ ...prev, [plan_id]: false }));
+    }
+  };
+
+  const fetchTestResults = async (test_id) => {
+    if (testResults[test_id]) return; // Already fetched
+    setLoadingTestResults((prev) => ({ ...prev, [test_id]: true }));
+    try {
+      const res = await fetch(`${API_BASE_URL}/tests/${test_id}/results`);
+      const data = await res.json();
+      if (data.success) {
+        setTestResults((prev) => ({ ...prev, [test_id]: data.data || [] }));
+      }
+    } catch (err) {
+      setTestResults((prev) => ({ ...prev, [test_id]: [] }));
+    } finally {
+      setLoadingTestResults((prev) => ({ ...prev, [test_id]: false }));
     }
   };
 
@@ -155,7 +193,25 @@ const FolderView = () => {
               <div className="space-y-4">
                 {tests.map((test) => (
                   <Card key={test.test_id} className="border p-3">
-                    <div className="font-semibold">{test.test_name || 'Untitled Test'}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold">{test.test_name || 'Untitled Test'}</div>
+                      <button
+                        className="ml-2 px-2 py-1 rounded text-xs bg-green-500 hover:bg-green-600 text-white"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (openTestResultsId === test.test_id) {
+                            setOpenTestResultsId(null);
+                          } else {
+                            setOpenTestResultsId(test.test_id);
+                            await fetchTestResults(test.test_id);
+                          }
+                        }}
+                        aria-label="Show test results"
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        Results
+                      </button>
+                    </div>
                     <div className="text-sm text-muted-foreground">Type: {test.test_type || 'N/A'}</div>
                     <div className="text-sm">Ordered Date: {test.ordered_date ? formatDate(test.ordered_date) : 'N/A'}</div>
                     <div className="text-sm">Ordered By: {test.ordered_by || 'N/A'}</div>
@@ -165,6 +221,33 @@ const FolderView = () => {
                     )}
                     {test.completed_date && (
                       <div className="text-sm">Completed: {formatDate(test.completed_date)}</div>
+                    )}
+                    {/* Test Results Popup */}
+                    {openTestResultsId === test.test_id && (
+                      <div className="absolute z-10 left-0 right-0 mt-2 bg-white border rounded shadow-lg p-4">
+                        {loadingTestResults[test.test_id] ? (
+                          <div>Loading test results...</div>
+                        ) : testResults[test.test_id] && testResults[test.test_id].length > 0 ? (
+                          <div className="space-y-3">
+                            {testResults[test.test_id].map((result) => (
+                              <Card key={result.result_id} className="border p-2">
+                                <div className="font-semibold">Result Value: {result.result_value || 'N/A'}</div>
+                                <div className="text-sm text-muted-foreground">Unit: {result.result_unit || 'N/A'}</div>
+                                <div className="text-sm">Reference Range: {result.reference_range || 'N/A'}</div>
+                                <div className="text-sm">Result Status: {result.result_status || 'N/A'}</div>
+                                <div className="text-sm">Result Date: {result.result_date ? formatDate(result.result_date) : 'N/A'}</div>
+                                <div className="text-sm">Uploaded By: {result.uploaded_by || 'N/A'}</div>
+                                <div className="text-sm">Created: {result.created_at ? formatDate(result.created_at) : 'N/A'}</div>
+                                {result.result_notes && (
+                                  <div className="text-sm mt-1">Notes: {result.result_notes}</div>
+                                )}
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <div>No test results available.</div>
+                        )}
+                      </div>
                     )}
                   </Card>
                 ))}
@@ -269,18 +352,64 @@ const FolderView = () => {
             ) : (
               <div className="space-y-4">
                 {(folder?.treatment_plans || []).map((plan) => (
-                  <Card key={plan.plan_id} className="border p-3">
-                    <div className="font-semibold">{plan.plan_name || 'Untitled Plan'}</div>
-                    <div className="text-sm text-muted-foreground">Status: {plan.status || 'active'}</div>
-                    <div className="text-sm">Priority: {plan.priority || 'medium'}</div>
-                    <div className="text-sm">Start Date: {plan.start_date ? formatDate(plan.start_date) : 'N/A'}</div>
-                    <div className="text-sm">End Date: {plan.end_date ? formatDate(plan.end_date) : 'N/A'}</div>
-                    <div className="text-sm">Created By: {plan.created_by || 'N/A'}</div>
-                    <div className="text-sm">Created: {plan.created_at ? formatDate(plan.created_at) : 'N/A'}</div>
-                    {plan.plan_description && (
-                      <div className="text-sm mt-2">Description: {plan.plan_description}</div>
+                  <div key={plan.plan_id} className="relative">
+                    <Card className="border p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="font-semibold">{plan.plan_name || 'Untitled Plan'}</div>
+                        <button
+                          className="ml-2 p-1 rounded hover:bg-gray-100"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (openActivitiesPlanId === plan.plan_id) {
+                              setOpenActivitiesPlanId(null);
+                            } else {
+                              setOpenActivitiesPlanId(plan.plan_id);
+                              await fetchActivities(plan.plan_id);
+                            }
+                          }}
+                          aria-label="Show activities"
+                        >
+                          <MoreVertical className="h-5 w-5 text-gray-500" />
+                        </button>
+                      </div>
+                      <div className="text-sm text-muted-foreground">Status: {plan.status || 'active'}</div>
+                      <div className="text-sm">Priority: {plan.priority || 'medium'}</div>
+                      <div className="text-sm">Start Date: {plan.start_date ? formatDate(plan.start_date) : 'N/A'}</div>
+                      <div className="text-sm">End Date: {plan.end_date ? formatDate(plan.end_date) : 'N/A'}</div>
+                      <div className="text-sm">Created By: {plan.created_by || 'N/A'}</div>
+                      <div className="text-sm">Created: {plan.created_at ? formatDate(plan.created_at) : 'N/A'}</div>
+                      {plan.plan_description && (
+                        <div className="text-sm mt-2">Description: {plan.plan_description}</div>
+                      )}
+                    </Card>
+                    {/* Activities Popover/Dropdown */}
+                    {openActivitiesPlanId === plan.plan_id && (
+                      <div className="absolute z-10 left-0 right-0 mt-2 bg-white border rounded shadow-lg p-4">
+                        {loadingActivities[plan.plan_id] ? (
+                          <div>Loading activities...</div>
+                        ) : activities[plan.plan_id] && activities[plan.plan_id].length > 0 ? (
+                          <div className="space-y-3">
+                            {activities[plan.plan_id].map((act) => (
+                              <Card key={act.activity_id} className="border p-2">
+                                <div className="font-semibold">{act.activity_name || 'Untitled Activity'}</div>
+                                <div className="text-sm text-muted-foreground">Type: {act.activity_type || 'N/A'}</div>
+                                <div className="text-sm">Start Date: {act.start_date ? formatDate(act.start_date) : 'N/A'}</div>
+                                <div className="text-sm">End Date: {act.end_date ? formatDate(act.end_date) : 'N/A'}</div>
+                                <div className="text-sm">Created By: {act.created_by || 'N/A'}</div>
+                                <div className="text-sm">Created: {act.created_at ? formatDate(act.created_at) : 'N/A'}</div>
+                                <div className="text-sm">Status: {act.status || 'active'}</div>
+                                {act.dosage && <div className="text-sm">Dosage: {act.dosage}</div>}
+                                {act.frequency && <div className="text-sm">Frequency: {act.frequency}</div>}
+                                {act.instructions && <div className="text-sm mt-1">Instructions: {act.instructions}</div>}
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <div>No activities for this plan.</div>
+                        )}
+                      </div>
                     )}
-                  </Card>
+                  </div>
                 ))}
               </div>
             )}
