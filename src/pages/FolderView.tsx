@@ -28,6 +28,7 @@ const FolderView = () => {
   const [openTestResultsId, setOpenTestResultsId] = useState(null);
   const [testResults, setTestResults] = useState({}); // { [test_id]: [result, ...] }
   const [loadingTestResults, setLoadingTestResults] = useState({}); // { [test_id]: boolean }
+  const [openDiagnosisDescriptionId, setOpenDiagnosisDescriptionId] = useState(null);
 
   useEffect(() => {
     if (folder_id) {
@@ -48,7 +49,10 @@ const FolderView = () => {
         setNotes(data.notes || []);
         setAttachments(data.attachments || []);
         setTests(data.tests || []);
-        setDiagnoses(data.diagnoses || []);
+        // Fetch diagnoses separately to ensure we get the right data
+        if (data.patient && data.patient.patient_id) {
+          await fetchDiagnoses(data.patient.patient_id);
+        }
       } else {
         setError(data.error || 'Failed to load folder');
       }
@@ -56,6 +60,22 @@ const FolderView = () => {
       setError('Error fetching folder');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDiagnoses = async (patientId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/patients/${patientId}/diagnoses`);
+      const data = await res.json();
+      if (data.success) {
+        setDiagnoses(data.data || []);
+      } else {
+        console.error('Failed to fetch diagnoses:', data.error);
+        setDiagnoses([]);
+      }
+    } catch (err) {
+      console.error('Error fetching diagnoses:', err);
+      setDiagnoses([]);
     }
   };
 
@@ -311,20 +331,37 @@ const FolderView = () => {
         {showDiagnoses && (
           <CardContent>
             {diagnoses.length === 0 ? (
-              <div>No diagnoses available.</div>
+              <div className="text-center py-4 text-muted-foreground">No diagnoses available.</div>
             ) : (
               <div className="space-y-4">
                 {diagnoses.map((diag) => (
-                  <Card key={diag.diagnosis_id} className="border p-3">
-                    <div className="font-semibold">{diag.diagnosis_name || 'Untitled Diagnosis'}</div>
-                    <div className="text-sm text-muted-foreground">Code: {diag.diagnosis_code || 'N/A'}</div>
-                    <div className="text-sm">Date: {diag.diagnosis_date ? formatDate(diag.diagnosis_date) : 'N/A'}</div>
-                    <div className="text-sm">Created By: {diag.created_by || 'N/A'}</div>
-                    <div className="text-sm">Created: {diag.created_at ? formatDate(diag.created_at) : 'N/A'}</div>
-                    <div className="text-sm">Severity: {diag.severity || 'N/A'}</div>
-                    <div className="text-sm">Status: {diag.status || 'active'}</div>
-                    {diag.diagnosis_description && (
-                      <div className="text-sm mt-2">Description: {diag.diagnosis_description}</div>
+                  <Card key={diag.diagnosis_id} className="border p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-semibold text-lg mb-2">{diag.diagnosis_name || 'Untitled Diagnosis'}</div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span>Severity: {diag.severity || 'N/A'}</span>
+                          <span>Created: {diag.created_at ? formatDate(diag.created_at) : 'N/A'}</span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOpenDiagnosisDescriptionId(
+                          openDiagnosisDescriptionId === diag.diagnosis_id ? null : diag.diagnosis_id
+                        )}
+                        className="ml-2"
+                      >
+                        {openDiagnosisDescriptionId === diag.diagnosis_id ? 'Hide' : 'View'} Description
+                      </Button>
+                    </div>
+                    {openDiagnosisDescriptionId === diag.diagnosis_id && diag.diagnosis_description && (
+                      <div className="mt-3 p-3 bg-gray-50 rounded border-l-4 border-medical-500">
+                        <div className="text-sm font-medium mb-1">Description:</div>
+                        <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                          {diag.diagnosis_description}
+                        </div>
+                      </div>
                     )}
                   </Card>
                 ))}
