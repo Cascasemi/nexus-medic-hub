@@ -70,7 +70,7 @@ const Responses = () => {
     }
   };
 
-  const createDiagnosis = async (patientId) => {
+  const createDiagnosis = async (patientId, reportId) => {
     setDiagnosisLoading(true);
     setDiagnosisError('');
     try {
@@ -81,7 +81,8 @@ const Responses = () => {
         },
         body: JSON.stringify({
           ...diagnosisForm,
-          created_by: user?.id
+          created_by: user?.id,
+          report_id: reportId
         }),
       });
       const data = await res.json();
@@ -95,6 +96,7 @@ const Responses = () => {
         });
         setShowDiagnosisForm(false);
         alert('Diagnosis created successfully!');
+        fetchReports(); // Refresh reports after responding
       } else {
         setDiagnosisError(data.error || 'Failed to create diagnosis');
       }
@@ -109,9 +111,9 @@ const Responses = () => {
     <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
-          <h1 className="text-2xl font-bold">Responses & Communications</h1>
+          <h1 className="text-2xl font-bold">Responses & Diagnosis</h1>
           <p className="text-muted-foreground">
-            Manage communications and patient responses
+            Manage communications between patients and Nexus Robo to diagnose
           </p>
         </div>
         <div className="mt-4 md:mt-0 flex space-x-2">
@@ -140,7 +142,7 @@ const Responses = () => {
           <div>No reports found.</div>
         ) : (
           <ul className="space-y-4">
-            {reports.map((report) => (
+            {reports.filter(r => r.status !== 'Responded').map((report) => (
               <li key={report.report_id} className="border rounded p-4 relative">
                 <div className="font-semibold">{patientMap[report.patient_id] || 'Unknown Patient'}</div>
                 <div className="text-xs text-muted-foreground mb-1">Status: {report.status || 'Not Responded'} | Confidential: {report.isconfidential ? 'Yes' : 'No'} | By: {report.created_by || 'N/A'}</div>
@@ -268,7 +270,7 @@ const Responses = () => {
                                 Cancel
                               </Button>
                               <Button
-                                onClick={() => createDiagnosis(report.patient_id)}
+                                onClick={() => createDiagnosis(report.patient_id, report.report_id)}
                                 disabled={diagnosisLoading || !diagnosisForm.diagnosis_name}
                                 className="bg-medical-500 hover:bg-medical-600"
                               >

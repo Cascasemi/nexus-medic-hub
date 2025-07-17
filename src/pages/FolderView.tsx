@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon, ChevronDown, ChevronRight, ClipboardList, MoreVertical, Eye } from 'lucide-react';
+import { Dialog } from '@/components/ui/dialog';
 
 const API_BASE_URL = 'http://localhost:3000/api/v1';
 
@@ -29,6 +30,7 @@ const FolderView = () => {
   const [testResults, setTestResults] = useState({}); // { [test_id]: [result, ...] }
   const [loadingTestResults, setLoadingTestResults] = useState({}); // { [test_id]: boolean }
   const [openDiagnosisDescriptionId, setOpenDiagnosisDescriptionId] = useState(null);
+  const [showPatientModal, setShowPatientModal] = useState(false);
 
   useEffect(() => {
     if (folder_id) {
@@ -119,6 +121,12 @@ const FolderView = () => {
     });
   };
 
+  // Helper to display user-friendly nulls
+  const displayValue = (val, fallback = 'Not specified') => {
+    if (val === null || val === undefined || val === '') return fallback;
+    return val;
+  };
+
   if (loading) {
     return <div className="p-6 text-center">Loading folder...</div>;
   }
@@ -167,13 +175,53 @@ const FolderView = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div>Name: {patient.first_name} {patient.last_name}</div>
-              <div>Date of Birth: {formatDate(patient.date_of_birth)}</div>
-              <div>Status: {patient.current_status}</div>
-              <div>Diagnosis: {patient.current_diagnosis}</div>
+              <div>Name: {displayValue(patient.first_name)} {displayValue(patient.last_name)}</div>
+              <div>Date of Birth: {displayValue(patient.date_of_birth, 'No date of birth')}</div>
+              <div>Status: {displayValue(patient.current_status)}</div>
+              <div>Diagnosis: {displayValue(patient.current_diagnosis)}</div>
+              <Button variant="outline" size="sm" className="mt-2" onClick={() => setShowPatientModal(true)}>
+                Read More
+              </Button>
             </div>
           </CardContent>
         </Card>
+      )}
+      {/* Patient Info Modal */}
+      {showPatientModal && patient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowPatientModal(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h3 className="text-lg font-bold mb-4">Patient Details</h3>
+            <div className="space-y-2">
+              <div><b>Patient ID:</b> {displayValue(patient.patient_id)}</div>
+              <div><b>First Name:</b> {displayValue(patient.first_name)}</div>
+              <div><b>Last Name:</b> {displayValue(patient.last_name)}</div>
+              <div><b>Date of Birth:</b> {displayValue(patient.date_of_birth, 'No date of birth')}</div>
+              <div><b>Admission Date:</b> {displayValue(patient.admission_date, 'No admission date')}</div>
+              <div><b>Blood Group:</b> {displayValue(patient.blood_group)}</div>
+              <div><b>Phone:</b> {displayValue(patient.phone)}</div>
+              <div><b>Email:</b> {displayValue(patient.email)}</div>
+              <div><b>Status:</b> {displayValue(patient.current_status)}</div>
+              <div><b>Diagnosis:</b> {displayValue(patient.current_diagnosis)}</div>
+              <div><b>Medical History:</b> {displayValue(patient.medical_history)}</div>
+              <div><b>Assigned Provider:</b> {displayValue(patient.assigned_provider)}</div>
+              <div><b>Created At:</b> {displayValue(patient.created_at)}</div>
+              <div><b>Updated At:</b> {displayValue(patient.updated_at)}</div>
+              <div><b>Emergency Contact:</b> {patient.emergency_contact ? (
+                <pre className="bg-gray-50 rounded p-2 text-xs whitespace-pre-wrap">{JSON.stringify(patient.emergency_contact, null, 2)}</pre>
+              ) : 'Not specified'}</div>
+              <div><b>Address:</b> {patient.address ? (
+                <pre className="bg-gray-50 rounded p-2 text-xs whitespace-pre-wrap">{JSON.stringify(patient.address, null, 2)}</pre>
+              ) : 'Not specified'}</div>
+            </div>
+          </div>
+        </div>
       )}
       {/* You can add more sections for notes, attachments, tests, diagnoses, etc. */}
       {/* Example: */}
