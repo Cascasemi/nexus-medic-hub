@@ -1,6 +1,6 @@
 import axios from 'axios';  // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://nexus-medi-backend.onrender.com/api/v1',
   timeout: 15000, // Increased timeout for development
   headers: {
     'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ api.interceptors.response.use(
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }        const response = await axios.post(
-          'http://localhost:3000/api/v1/auth/staff/refresh',
+          `${import.meta.env.VITE_API_BASE_URL || 'https://nexus-medi-backend.onrender.com/api/v1'}/auth/staff/refresh`,
           { refresh_token: refreshToken }
         );
 

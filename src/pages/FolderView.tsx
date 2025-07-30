@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon, ChevronDown, ChevronRight, ClipboardList, MoreVertical, Eye } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
 
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nexus-medi-backend.onrender.com/api/v1';
 
 const FolderView = () => {
   const { folder_id } = useParams();
