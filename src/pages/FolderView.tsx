@@ -127,6 +127,30 @@ const FolderView = () => {
     return val;
   };
 
+  const renderEmergencyContact = (contact) => {
+    if (!contact) return 'Not specified';
+    return (
+      <div className="space-y-1">
+        <div><b>Name:</b> {displayValue(contact.name)}</div>
+        <div><b>Phone:</b> {displayValue(contact.phone)}</div>
+        <div><b>Relationship:</b> {displayValue(contact.relationship)}</div>
+      </div>
+    );
+  };
+
+  const renderAddress = (address) => {
+    if (!address) return 'Not specified';
+    return (
+      <div className="space-y-1">
+        <div><b>Street:</b> {displayValue(address.street)}</div>
+        <div><b>City:</b> {displayValue(address.city)}</div>
+        <div><b>State:</b> {displayValue(address.state)}</div>
+        <div><b>Country:</b> {displayValue(address.country)}</div>
+        <div><b>Postal Code:</b> {displayValue(address.postalCode)}</div>
+      </div>
+    );
+  };
+
   if (loading) {
     return <div className="p-6 text-center">Loading folder...</div>;
   }
@@ -213,12 +237,8 @@ const FolderView = () => {
               <div><b>Assigned Provider:</b> {displayValue(patient.assigned_provider)}</div>
               <div><b>Created At:</b> {displayValue(patient.created_at)}</div>
               <div><b>Updated At:</b> {displayValue(patient.updated_at)}</div>
-              <div><b>Emergency Contact:</b> {patient.emergency_contact ? (
-                <pre className="bg-gray-50 rounded p-2 text-xs whitespace-pre-wrap">{JSON.stringify(patient.emergency_contact, null, 2)}</pre>
-              ) : 'Not specified'}</div>
-              <div><b>Address:</b> {patient.address ? (
-                <pre className="bg-gray-50 rounded p-2 text-xs whitespace-pre-wrap">{JSON.stringify(patient.address, null, 2)}</pre>
-              ) : 'Not specified'}</div>
+              <div><b>Emergency Contact:</b> {renderEmergencyContact(patient.emergency_contact)}</div>
+              <div><b>Address:</b> {renderAddress(patient.address)}</div>
             </div>
           </div>
         </div>
