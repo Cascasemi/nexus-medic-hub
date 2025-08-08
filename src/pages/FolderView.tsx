@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon, ChevronDown, ChevronRight, ClipboardList, MoreVertical, Eye } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
 
-// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nexus-medi-backend.onrender.com/api/v1';
-const API_BASE_URL = 'http://localhost:3000/api/v1'; // Local development URL for testing
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const FolderView = () => {
   const { folder_id } = useParams();
   const navigate = useNavigate();
+  const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [folder, setFolder] = useState(null);
@@ -102,7 +103,9 @@ const FolderView = () => {
     if (testResults[test_id]) return; // Already fetched
     setLoadingTestResults((prev) => ({ ...prev, [test_id]: true }));
     try {
-      const res = await fetch(`${API_BASE_URL}/tests/${test_id}/results`);
+      const headers: Record<string, string> = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(`${API_BASE_URL}/tests/${test_id}/results`, { headers });
       const data = await res.json();
       if (data.success) {
         setTestResults((prev) => ({ ...prev, [test_id]: data.data || [] }));
@@ -281,7 +284,7 @@ const FolderView = () => {
             ) : (
               <div className="space-y-4">
                 {tests.map((test) => (
-                  <Card key={test.test_id} className="border p-3">
+                  <Card key={test.test_id} className="relative border p-3">
                     <div className="flex items-center justify-between">
                       <div className="font-semibold">{test.test_name || 'Untitled Test'}</div>
                       <button
@@ -527,4 +530,4 @@ const FolderView = () => {
   );
 };
 
-export default FolderView; 
+export default FolderView;
