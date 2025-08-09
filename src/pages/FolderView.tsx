@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon, ChevronDown, ChevronRight, ClipboardList, MoreVertical, Eye } from 'lucide-react';
-import { Dialog } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -28,7 +28,8 @@ const FolderView = () => {
   const [openActivitiesPlanId, setOpenActivitiesPlanId] = useState(null);
   const [activities, setActivities] = useState({}); // { [plan_id]: [activity, ...] }
   const [loadingActivities, setLoadingActivities] = useState({}); // { [plan_id]: boolean }
-  const [openTestResultsId, setOpenTestResultsId] = useState(null);
+  const [openTestResultsId, setOpenTestResultsId] = useState(null); // legacy inline popup (to be removed)
+  const [viewResultsId, setViewResultsId] = useState(null); // dialog based
   const [testResults, setTestResults] = useState({}); // { [test_id]: [result, ...] }
   const [loadingTestResults, setLoadingTestResults] = useState({}); // { [test_id]: boolean }
   const [openDiagnosisDescriptionId, setOpenDiagnosisDescriptionId] = useState(null);
@@ -153,6 +154,17 @@ const FolderView = () => {
         <div><b>Postal Code:</b> {displayValue(address.postalCode)}</div>
       </div>
     );
+  };
+
+  // Result status color helper
+  const getResultStatusColor = (status) => {
+    switch(status?.toLowerCase()) {
+      case 'normal': return 'text-green-600';
+      case 'abnormal': return 'text-orange-600';
+      case 'critical': return 'text-red-600';
+      case 'inconclusive': return 'text-gray-600';
+      default: return 'text-gray-600';
+    }
   };
 
   if (loading) {
@@ -291,12 +303,8 @@ const FolderView = () => {
                         className="ml-2 px-2 py-1 rounded text-xs bg-green-500 hover:bg-green-600 text-white"
                         onClick={async (e) => {
                           e.stopPropagation();
-                          if (openTestResultsId === test.test_id) {
-                            setOpenTestResultsId(null);
-                          } else {
-                            setOpenTestResultsId(test.test_id);
-                            await fetchTestResults(test.test_id);
-                          }
+                          setViewResultsId(test.test_id);
+                          await fetchTestResults(test.test_id);
                         }}
                         aria-label="Show test results"
                       >
@@ -313,33 +321,6 @@ const FolderView = () => {
                     )}
                     {test.completed_date && (
                       <div className="text-sm">Completed: {formatDate(test.completed_date)}</div>
-                    )}
-                    {/* Test Results Popup */}
-                    {openTestResultsId === test.test_id && (
-                      <div className="absolute z-10 left-0 right-0 mt-2 bg-white border rounded shadow-lg p-4">
-                        {loadingTestResults[test.test_id] ? (
-                          <div>Loading test results...</div>
-                        ) : testResults[test.test_id] && testResults[test.test_id].length > 0 ? (
-                          <div className="space-y-3">
-                            {testResults[test.test_id].map((result) => (
-                              <Card key={result.result_id} className="border p-2">
-                                <div className="font-semibold">Result Value: {result.result_value || 'N/A'}</div>
-                                <div className="text-sm text-muted-foreground">Unit: {result.result_unit || 'N/A'}</div>
-                                <div className="text-sm">Reference Range: {result.reference_range || 'N/A'}</div>
-                                <div className="text-sm">Result Status: {result.result_status || 'N/A'}</div>
-                                <div className="text-sm">Result Date: {result.result_date ? formatDate(result.result_date) : 'N/A'}</div>
-                                <div className="text-sm">Uploaded By: {result.uploaded_by || 'N/A'}</div>
-                                <div className="text-sm">Created: {result.created_at ? formatDate(result.created_at) : 'N/A'}</div>
-                                {result.result_notes && (
-                                  <div className="text-sm mt-1">Notes: {result.result_notes}</div>
-                                )}
-                              </Card>
-                            ))}
-                          </div>
-                        ) : (
-                          <div>No test results available.</div>
-                        )}
-                      </div>
                     )}
                   </Card>
                 ))}
@@ -525,7 +506,55 @@ const FolderView = () => {
           </CardContent>
         )}
       </Card>
-      {/* Add similar cards for tests and diagnoses if needed */}
+      {/* Test Results Dialog Popup */}
+      <Dialog open={!!viewResultsId} onOpenChange={(open) => !open && setViewResultsId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Test Results</DialogTitle>
+            <DialogDescription>Detailed results for this test</DialogDescription>
+          </DialogHeader>
+          {viewResultsId && (
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+              {loadingTestResults[viewResultsId] ? (
+                <div className="py-6 text-center text-sm">Loading results...</div>
+              ) : (testResults[viewResultsId] || []).length > 0 ? (
+                testResults[viewResultsId].map((result) => (
+                  <Card key={result.result_id} className="p-4 border">
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold text-lg">{result.result_value || 'N/A'} {result.result_unit}</div>
+                      {result.result_status && (
+                        <span className={`text-xs font-medium ${getResultStatusColor(result.result_status)}`}>{result.result_status}</span>
+                      )}
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-500">Date:</span> {result.result_date ? formatDate(result.result_date) : 'N/A'}
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Uploaded:</span> {result.uploaded_by || 'N/A'}
+                      </div>
+                      {result.reference_range && (
+                        <div className="col-span-2"><span className="text-gray-500">Ref Range:</span> {result.reference_range}</div>
+                      )}
+                    </div>
+                    {result.result_notes && (
+                      <div className="mt-3 pt-3 border-t text-sm whitespace-pre-wrap">
+                        <span className="block font-medium mb-1">Notes</span>
+                        {result.result_notes}
+                      </div>
+                    )}
+                  </Card>
+                ))
+              ) : (
+                <div className="py-6 text-center text-sm text-muted-foreground">No test results available.</div>
+              )}
+            </div>
+          )}
+          <DialogClose asChild>
+            <Button variant="outline" className="w-full mt-4">Close</Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
