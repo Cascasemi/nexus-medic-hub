@@ -1,0 +1,8 @@
+google-generativeai
+google.genai
+speechrecognition
+pyttsx3
+python-docx
+keyboard
+pyaudio
+python-dotenv
