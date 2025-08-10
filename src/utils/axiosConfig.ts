@@ -1,7 +1,9 @@
 import axios from 'axios';  // Create axios instance with base configuration
+// Resolve API base URL strictly from environment (defined in .env as VITE_API_BASE_URL)
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const api = axios.create({
-  // baseURL: import.meta.env.VITE_API_BASE_URL || 'https://nexus-medi-backend.onrender.com/api/v1',
-  baseURL: 'http://localhost:3000/api/v1', // Local development URL for testing
+  baseURL: BASE_URL,
   timeout: 15000, // Increased timeout for development
   headers: {
     'Content-Type': 'application/json',
@@ -58,10 +60,9 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem('refresh_token');
         if (!refreshToken) {
           throw new Error('No refresh token available');
-        }        const response = await axios.post(
-          `http://localhost:3000/api/v1/auth/staff/refresh`,
-          { refresh_token: refreshToken }
-        );
+        }        // Build refresh endpoint relative to current base URL
+        const refreshEndpoint = `${api.defaults.baseURL?.replace(/\/$/, '')}/auth/staff/refresh`;
+        const response = await axios.post(refreshEndpoint, { refresh_token: refreshToken });
 
         const { access_token, refresh_token } = response.data;
         localStorage.setItem('access_token', access_token);
