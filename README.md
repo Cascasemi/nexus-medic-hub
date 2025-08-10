@@ -84,6 +84,7 @@ This project is built with:
 
 ## Software code Installation(Nexus Medic Hub)
 
+https://nexus-medic-hub.vercel.app/dashboard
 
 A comprehensive medical facility management and metrics platform.
 
