@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Search, Plus, Eye, Stethoscope } from "lucide-react";
@@ -10,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from '@/contexts/AuthContext';
 
 // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nexus-medi-backend.onrender.com/api/v1';
-const API_BASE_URL = 'http://localhost:3000/api/v1'; // Local development URL for testing
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Responses = () => {
   const [reports, setReports] = useState([]);

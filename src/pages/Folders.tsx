@@ -22,8 +22,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from 'react-router-dom';
 
-// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nexus-medi-backend.onrender.com/api/v1';
-const API_BASE_URL = 'http://localhost:3000/api/v1'; // Local development URL for testing
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Folders = () => {
   const { user } = useAuth();
