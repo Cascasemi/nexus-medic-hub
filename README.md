@@ -85,6 +85,18 @@ This project is built with:
 ## Software code Installation(Nexus Medic Hub)
 
 https://nexus-medic-hub.vercel.app
+```sh
+you can log in with this credentials:
+doctor or nurse:
+edna@nexusmedichub.com
+edna123456
+
+admin:
+admin@nexusmedichub.com
+admin123456
+
+#you can use the admin to create more users if needed
+```
 
 A comprehensive medical facility management and metrics platform.
 
