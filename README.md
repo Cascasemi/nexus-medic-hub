@@ -157,7 +157,7 @@ npm run build
 ```
 
 ## Watch Our Demo
-https://youtube.com/@nexus-d1n?si=QXK7R6qM33h7bhbh
+https://youtu.be/YxdESYEr8Zc?si=kMpITP8I1yrfhdOp
 
 ## How to Get Involved
 We invite doctors, hospitals, healthcare institutions, NGOs, researchers, and technology partners to collaborate with us in bringing Robot Nexus to both rural and urban healthcare settings. By joining our pilot programs, you can help validate, refine, and expand the system to meet the unique needs of your facility and community.
