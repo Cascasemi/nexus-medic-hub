@@ -78,25 +78,36 @@ This project is built with:
 
 **NB: The Main_document_session.py code can only be run on the nexus hardware for full feature experience since it makes use of GPIO pins, RFID card scanner and sensors to function perfectly. Nevertheless, a sample desktop version has been made available but you would not be able to experience the full capability of the Nexus device since your PC does not have GPIO pins for the sensors and RFID card scanner to be connected.**
 
--To run the code  on the Nexus device, navigate to Nexus/nexus-device/hardware_instructions.txt
+-To run the code  on the Nexus device, navigate to nexus-device/hardware_instructions.txt
 
--To run a sample of the AI documentation and report generation on your PC, Navigate to Nexus/nexus-device/how_to_run_code.txt for detailed steps.
+-To run a sample of the AI documentation and report generation on your PC, Navigate to nexus-device/how_to_run_code.txt for detailed steps.
 
 ## Software code Installation(Nexus Medic Hub)
 
 https://nexus-medic-hub.vercel.app
+
+You can log in with this credentials:
+Doctor or nurse:
+Username
 ```sh
-you can log in with this credentials:
-doctor or nurse:
 edna@nexusmedichub.com
-edna123456
-
-admin:
-admin@nexusmedichub.com
-admin123456
-
-#you can use the admin to create more users if needed
 ```
+Password:
+```sh
+edna123456
+```
+
+As admin:
+Username:
+```sh
+admin@nexusmedichub.com
+```
+Password:
+```sh
+admin123456
+```
+NB: you can use the admin to create more users if needed
+
 
 A comprehensive medical facility management and metrics platform.
 
