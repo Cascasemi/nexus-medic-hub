@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -118,6 +119,7 @@ interface PatientFormData {
 
 const Patients = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -128,6 +130,9 @@ const Patients = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState<string | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const [formData, setFormData] = useState<PatientFormData>({
@@ -356,8 +361,15 @@ const Patients = () => {
   };
 
   const handleDeletePatient = async (patientId: string) => {
+    if (!deletePassword) {
+      setDeleteError("Enter your password to confirm deletion");
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError("");
     try {
-      await api.delete(`/patients/${patientId}`);
+      await api.delete(`/patients/${patientId}`, { data: { password: deletePassword } });
       toast({
         title: "Success",
         description: "Patient deleted successfully",
@@ -365,13 +377,15 @@ const Patients = () => {
       });
       fetchPatients();
       setIsDetailsOpen(false); // Close the details sheet if open
+      setDeleteConfirmOpen(false);
+      setPatientToDelete(null);
+      setDeletePassword("");
     } catch (error: any) {
       console.error('Error deleting patient:', error);
-      toast({
-        variant: "destructive",
-        title: "Error deleting patient",
-        description: error.response?.data?.error || error.message
-      });
+      // Keep the dialog open so the admin can retry with the correct password
+      setDeleteError(error.response?.data?.error || "Failed to delete patient");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -507,16 +521,18 @@ const Patients = () => {
                           <Edit2 className="h-4 w-4 mr-2" />
                           Edit Patient
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setPatientToDelete(patient.patient_id);
-                            setDeleteConfirmOpen(true);
-                          }}
-                          className="text-red-600"
-                        >
-                          <Trash className="h-4 w-4 mr-2" />
-                          Delete Patient
-                        </DropdownMenuItem>
+                        {user?.role === "admin" && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setPatientToDelete(patient.patient_id);
+                              setDeleteConfirmOpen(true);
+                            }}
+                            className="text-red-600"
+                          >
+                            <Trash className="h-4 w-4 mr-2" />
+                            Delete Patient
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -1171,14 +1187,42 @@ const Patients = () => {
       </Sheet>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+      <Dialog
+        open={deleteConfirmOpen}
+        onOpenChange={(open) => {
+          setDeleteConfirmOpen(open);
+          if (!open) {
+            setPatientToDelete(null);
+            setDeletePassword("");
+            setDeleteError("");
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Patient Record</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete this patient record? This action cannot be undone.
+              Enter your password to confirm.
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="delete_password">Your Password</Label>
+            <Input
+              id="delete_password"
+              type="password"
+              value={deletePassword}
+              onChange={(e) => {
+                setDeletePassword(e.target.value);
+                setDeleteError("");
+              }}
+              disabled={isDeleting}
+              autoFocus
+            />
+            {deleteError && (
+              <p className="text-sm text-red-600">{deleteError}</p>
+            )}
+          </div>
           <DialogFooter className="sm:justify-start">
             <Button
               type="button"
@@ -1186,12 +1230,11 @@ const Patients = () => {
               onClick={() => {
                 if (patientToDelete) {
                   handleDeletePatient(patientToDelete);
-                  setDeleteConfirmOpen(false);
-                  setPatientToDelete(null);
                 }
               }}
+              disabled={isDeleting || !deletePassword}
             >
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </Button>
             <Button
               type="button"
@@ -1199,7 +1242,10 @@ const Patients = () => {
               onClick={() => {
                 setDeleteConfirmOpen(false);
                 setPatientToDelete(null);
+                setDeletePassword("");
+                setDeleteError("");
               }}
+              disabled={isDeleting}
             >
               Cancel
             </Button>

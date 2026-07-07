@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Search, Plus, Eye, Stethoscope } from "lucide-react";
+import { MessageSquare, Search, Plus, Eye, Stethoscope, Trash2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from "@/components/ui/label";
@@ -29,11 +30,38 @@ const Responses = () => {
   const [diagnosisLoading, setDiagnosisLoading] = useState(false);
   const [diagnosisError, setDiagnosisError] = useState('');
   const { user, token } = useAuth();
+  const { toast } = useToast();
+  const [deletingReportId, setDeletingReportId] = useState(null);
 
   useEffect(() => {
     fetchReports();
     fetchPatients();
   }, []);
+
+  const deleteReport = async (reportId) => {
+    if (!confirm('Delete this report? This cannot be undone.')) return;
+
+    setDeletingReportId(reportId);
+    try {
+      const res = await fetch(`${API_BASE_URL}/reports/${reportId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setReports(prev => prev.filter(r => r.report_id !== reportId));
+        if (openReportId === reportId) setOpenReportId(null);
+        toast({ title: 'Report deleted', description: 'The report has been removed.' });
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: data.error || 'Failed to delete report' });
+      }
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete report' });
+    } finally {
+      setDeletingReportId(null);
+    }
+  };
 
   const fetchReports = async () => {
     setLoading(true);
@@ -155,6 +183,15 @@ const Responses = () => {
                   onClick={() => setOpenReportId(report.report_id)}
                 >
                   <Eye className="h-4 w-4 mr-1 inline" /> View Report
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-red-600 hover:text-red-700 text-xs px-3 py-1 ml-2"
+                  onClick={() => deleteReport(report.report_id)}
+                  disabled={deletingReportId === report.report_id}
+                >
+                  <Trash2 className="h-4 w-4 mr-1 inline" />
+                  {deletingReportId === report.report_id ? 'Deleting...' : 'Delete'}
                 </Button>
                 {/* Report Popup */}
                 {openReportId === report.report_id && (
