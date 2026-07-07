@@ -46,7 +46,9 @@ const FolderView = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE_URL}/folders/${folder_id}`);
+      const res = await fetch(`${API_BASE_URL}/folders/${folder_id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.success) {
         setFolder(data.folder);
@@ -70,7 +72,9 @@ const FolderView = () => {
 
   const fetchDiagnoses = async (patientId) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/patients/${patientId}/diagnoses`);
+      const res = await fetch(`${API_BASE_URL}/patients/${patientId}/diagnoses`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.success) {
         setDiagnoses(data.data || []);

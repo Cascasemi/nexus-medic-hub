@@ -25,7 +25,7 @@ import { useNavigate } from 'react-router-dom';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Folders = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
   const [folders, setFolders] = useState([]);
   const [patients, setPatients] = useState([]);
@@ -43,7 +43,9 @@ const Folders = () => {
 
   const fetchPatients = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/patients`);
+      const response = await fetch(`${API_BASE_URL}/patients`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
       if (data.success) {
         setPatients(data.data);
@@ -59,7 +61,9 @@ const Folders = () => {
   const fetchFolders = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_BASE_URL}/folders`);
+      const response = await fetch(`${API_BASE_URL}/folders`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -88,6 +92,7 @@ const Folders = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           patient_id: selectedPatient,

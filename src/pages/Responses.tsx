@@ -28,7 +28,7 @@ const Responses = () => {
   });
   const [diagnosisLoading, setDiagnosisLoading] = useState(false);
   const [diagnosisError, setDiagnosisError] = useState('');
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   useEffect(() => {
     fetchReports();
@@ -55,7 +55,9 @@ const Responses = () => {
 
   const fetchPatients = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/patients`);
+      const res = await fetch(`${API_BASE_URL}/patients`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.success) {
         setPatients(data.data || []);
@@ -78,6 +80,7 @@ const Responses = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...diagnosisForm,
