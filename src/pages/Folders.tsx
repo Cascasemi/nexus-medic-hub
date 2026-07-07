@@ -114,6 +114,10 @@ const Folders = () => {
     }
   };
 
+  // Patients who already have a folder shouldn't appear in the "create folder" dropdown
+  const patientIdsWithFolders = new Set(folders.map(f => f.patient_id));
+  const patientsWithoutFolders = patients.filter(p => !patientIdsWithFolders.has(p.patient_id));
+
   const filteredFolders = folders.filter(folder => {
     const patient = patients.find(p => p.patient_id === folder.patient_id);
     if (!patient) return false;
@@ -191,20 +195,26 @@ const Folders = () => {
                       <SelectValue placeholder="Choose a patient" />
                     </SelectTrigger>
                     <SelectContent>
-                      {patients.map((patient) => (
-                        <SelectItem 
-                          key={patient.patient_id} 
-                          value={patient.patient_id}
-                        >
-                          <div className="flex items-center space-x-2">
-                            <User className="h-4 w-4" />
-                            <span>{patient.first_name} {patient.last_name}</span>
-                            <span className="text-muted-foreground text-sm">
-                              {patient.patient_id}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
+                      {patientsWithoutFolders.length === 0 ? (
+                        <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+                          All patients already have a folder
+                        </div>
+                      ) : (
+                        patientsWithoutFolders.map((patient) => (
+                          <SelectItem
+                            key={patient.patient_id}
+                            value={patient.patient_id}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <User className="h-4 w-4" />
+                              <span>{patient.first_name} {patient.last_name}</span>
+                              <span className="text-muted-foreground text-sm">
+                                {patient.patient_id}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
