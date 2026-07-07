@@ -77,7 +77,7 @@ const ManageStaff = () => {
     name: "",
     email: "",
     password: "",
-    role: "staff",
+    role: "",
     department: "",
   });
   const [actionType, setActionType] = useState<"activate" | "deactivate">("deactivate");
@@ -105,6 +105,15 @@ const ManageStaff = () => {
 
   // Add new staff member
   const handleAddStaff = async () => {
+    if (!formData.role) {
+      toast({
+        variant: "destructive",
+        title: "Missing role",
+        description: "Please select a role for the new staff member",
+      });
+      return;
+    }
+
     try {
       const response = await api.post("/auth/staff/register", formData);
       toast({
@@ -117,7 +126,7 @@ const ManageStaff = () => {
         name: "",
         email: "",
         password: "",
-        role: "staff",
+        role: "",
         department: "",
       });
     } catch (error: any) {
@@ -335,7 +344,9 @@ const ManageStaff = () => {
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="doctor">Doctor</SelectItem>
                   <SelectItem value="nurse">Nurse</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
+                  <SelectItem value="receptionist">Receptionist</SelectItem>
+                  <SelectItem value="technician">Technician</SelectItem>
+                  <SelectItem value="pharmacist">Pharmacist</SelectItem>
                 </SelectContent>
               </Select>
             </div>

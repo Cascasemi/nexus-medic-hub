@@ -347,23 +347,45 @@ const FolderView = () => {
               <div>No attachments available.</div>
             ) : (
               <div className="space-y-4">
-                {attachments.map((att) => (
-                  <Card key={att.attachment_id} className="border p-3">
-                    <div className="font-semibold">{att.file_name || 'Untitled File'}</div>
-                    <div className="text-sm text-muted-foreground">Type: {att.file_type || 'N/A'}</div>
-                    <div className="text-sm">Uploaded By: {att.uploaded_by || 'N/A'}</div>
-                    <div className="text-sm">Created: {att.created_at ? formatDate(att.created_at) : 'N/A'}</div>
-                    {att.file_size && (
-                      <div className="text-sm">Size: {att.file_size} bytes</div>
-                    )}
-                    {att.description && (
-                      <div className="text-sm mt-2">Description: {att.description}</div>
-                    )}
-                    {att.file_path && (
-                      <div className="text-sm mt-2">Path: {att.file_path}</div>
-                    )}
-                  </Card>
-                ))}
+                {attachments.map((att) => {
+                  const relatedTest = att.related_table === 'patient_tests'
+                    ? tests.find((t) => t.test_id === att.related_id)
+                    : null;
+
+                  return (
+                    <Card key={att.attachment_id} className="border p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="font-semibold">
+                            {relatedTest ? relatedTest.test_name : (att.file_name || 'Untitled File')}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Date: {att.created_at ? formatDate(att.created_at) : 'N/A'}
+                          </div>
+                        </div>
+                        {att.download_url && (
+                          <a
+                            href={att.download_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="shrink-0 px-3 py-1 rounded text-xs bg-medical-500 hover:bg-medical-600 text-white"
+                          >
+                            Download
+                          </a>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">File: {att.file_name || 'N/A'}</div>
+                      <div className="text-sm text-muted-foreground">Type: {att.file_type || 'N/A'}</div>
+                      <div className="text-sm">Uploaded By: {att.uploaded_by || 'N/A'}</div>
+                      {att.file_size && (
+                        <div className="text-sm">Size: {att.file_size} bytes</div>
+                      )}
+                      {att.description && (
+                        <div className="text-sm mt-2">Description: {att.description}</div>
+                      )}
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </CardContent>

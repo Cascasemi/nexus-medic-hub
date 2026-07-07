@@ -54,7 +54,10 @@ const Test = () => {
     uploaded_by: user?.id || ''
   });
   const [loadingResult, setLoadingResult] = useState(false);
+  const [resultFile, setResultFile] = useState<File | null>(null);
   const [testResults, setTestResults] = useState({});
+  const [testAttachments, setTestAttachments] = useState({});
+  const [loadingAttachments, setLoadingAttachments] = useState({});
   const [loadingTestResults, setLoadingTestResults] = useState({});
   const [loadingTests, setLoadingTests] = useState(false);
 
@@ -399,7 +402,35 @@ const Test = () => {
       setLoadingTestResults(prev => ({ ...prev, [testId]: false }));
     }
   };
-  
+
+  const fetchTestAttachments = async (testId) => {
+    if (loadingAttachments[testId]) return;
+
+    setLoadingAttachments(prev => ({ ...prev, [testId]: true }));
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/tests/${testId}/attachments`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        setTestAttachments(prev => ({ ...prev, [testId]: [] }));
+        return [];
+      }
+
+      const data = await res.json();
+      const files = data.success ? (data.data || []) : [];
+      setTestAttachments(prev => ({ ...prev, [testId]: files }));
+      return files;
+    } catch (error) {
+      console.error('Error fetching test attachments:', error);
+      setTestAttachments(prev => ({ ...prev, [testId]: [] }));
+      return [];
+    } finally {
+      setLoadingAttachments(prev => ({ ...prev, [testId]: false }));
+    }
+  };
+
   const handleDelete = async (testId) => {
     if (!confirm('Are you sure you want to delete this test?')) {
       return;
@@ -479,6 +510,7 @@ const Test = () => {
       result_notes: '',
       uploaded_by: user?.id || ''
     });
+    setResultFile(null);
     setResultTestId(null);
   };
   
@@ -586,13 +618,53 @@ const Test = () => {
       console.log('Response from server:', data);
       
       if (data.success) {
-        toast({ 
-          title: 'Result added', 
-          description: 'Test result added successfully' 
+        toast({
+          title: 'Result added',
+          description: 'Test result added successfully'
         });
+
+        // Upload the attached file (if any) before clearing the form, since
+        // resetResultForm() clears both resultFile and resultTestId.
+        if (resultFile) {
+          const currentTestId = resultTestId;
+          const currentFile = resultFile;
+          const fileFormData = new FormData();
+          fileFormData.append('file', currentFile);
+
+          try {
+            const uploadRes = await fetch(`${API_BASE_URL}/tests/${currentTestId}/attachments`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${token}` },
+              body: fileFormData
+            });
+
+            if (!uploadRes.ok) {
+              const errData = await uploadRes.json().catch(() => ({}));
+              toast({
+                title: 'File upload failed',
+                description: errData.error || 'The result was saved, but the file could not be uploaded.',
+                variant: 'destructive'
+              });
+            } else {
+              setTestAttachments(prev => {
+                const next = { ...prev };
+                delete next[currentTestId];
+                return next;
+              });
+            }
+          } catch (uploadError) {
+            console.error('Error uploading result file:', uploadError);
+            toast({
+              title: 'File upload failed',
+              description: 'The result was saved, but the file could not be uploaded: ' + uploadError.message,
+              variant: 'destructive'
+            });
+          }
+        }
+
         resetResultForm();
         fetchTests();
-        
+
         // Clear cached test results to force a refresh
         if (testResults[resultTestId]) {
           setTestResults(prev => {
@@ -882,6 +954,35 @@ const Test = () => {
         ) : (
           <p className="text-center py-4">No results available for this test.</p>
         )}
+
+        <div className="pt-2 border-t">
+          <p className="text-sm font-medium text-gray-500 mb-2">Attached Files</p>
+          {loadingAttachments[testId] ? (
+            <p className="text-sm text-center py-2">Loading files...</p>
+          ) : (testAttachments[testId] && testAttachments[testId].length > 0) ? (
+            <div className="space-y-2">
+              {testAttachments[testId].map((att) => (
+                <div key={att.attachment_id} className="flex items-center justify-between text-sm border rounded p-2">
+                  <span className="truncate">{att.file_name}</span>
+                  {att.download_url ? (
+                    <a
+                      href={att.download_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-500 hover:text-blue-700 whitespace-nowrap ml-2"
+                    >
+                      Download
+                    </a>
+                  ) : (
+                    <span className="text-gray-400 whitespace-nowrap ml-2">Unavailable</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400">No files attached.</p>
+          )}
+        </div>
       </div>
     );
   };
@@ -1045,6 +1146,7 @@ const Test = () => {
                           onClick={() => {
                             setViewResultsId(t.test_id);
                             fetchTestResults(t.test_id);
+                            fetchTestAttachments(t.test_id);
                           }}
                           title="View results"
                         >
@@ -1166,8 +1268,19 @@ const Test = () => {
                   className="min-h-[100px]"
                 />
               </div>
+
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="result_file">Attach File</Label>
+                <Input
+                  id="result_file"
+                  type="file"
+                  accept="application/pdf,image/png,image/jpeg"
+                  onChange={(e) => setResultFile(e.target.files?.[0] || null)}
+                />
+                <p className="text-xs text-muted-foreground">Optional — PDF, PNG, or JPEG, up to 20MB</p>
+              </div>
             </div>
-            
+
             <DialogFooter className="mt-4">
               <Button 
                 variant="outline" 

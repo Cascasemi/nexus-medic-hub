@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { ActivitySquare, ChevronLeft, ChevronRight, FolderOpen, Home, LogOut, Settings, UserRound, MessageSquare, Video, Users, UserCog, FlaskConical } from "lucide-react";
+import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -81,8 +82,8 @@ export const SidebarNav = () => {
             to="/folders" 
             isCollapsed={collapsed} 
           />
-          {/* Test sidebar item, only for Lab Technician or admin */}
-          {user && (user.role === 'Lab Technician' || user.role === 'admin') && (
+          {/* Test sidebar item, only for technicians or admin */}
+          {user && (user.role === 'technician' || user.role === 'admin') && (
             <SidebarItem 
               icon={<FlaskConical />} 
               title="Tests" 
@@ -123,14 +124,28 @@ export const SidebarNav = () => {
             </div>
           )}
           
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            onClick={handleLogout}
-          >
-            <LogOut size={20} />
-          </Button>
+          <div className="flex items-center">
+            <ChangePasswordDialog>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                title="Change password"
+              >
+                <Settings size={20} />
+              </Button>
+            </ChangePasswordDialog>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              onClick={handleLogout}
+              title="Log out"
+            >
+              <LogOut size={20} />
+            </Button>
+          </div>
         </div>
       </div>
       
