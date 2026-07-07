@@ -96,6 +96,7 @@ interface Patient {
   current_diagnosis?: string;
   medical_history?: string;
   assigned_provider?: string | null;
+  assigned_provider_name?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -457,7 +458,7 @@ const Patients = () => {
                       {patient.current_status || 'Unknown'}
                     </Badge>
                   </TableCell>
-                  <TableCell>{patient.assigned_provider || 'Unassigned'}</TableCell>
+                  <TableCell>{patient.assigned_provider_name || 'Unassigned'}</TableCell>
                   <TableCell>
                     {format(new Date(patient.admission_date), 'MMM dd, yyyy')}
                   </TableCell>
@@ -1116,7 +1117,7 @@ const Patients = () => {
                       <Label className="flex items-center gap-2">
                         <Stethoscope className="h-4 w-4" /> Assigned Provider
                       </Label>
-                      <p>{selectedPatient.assigned_provider}</p>
+                      <p>{selectedPatient.assigned_provider_name || selectedPatient.assigned_provider}</p>
                     </div>
                   ) : (
                     <div className="text-muted-foreground">
