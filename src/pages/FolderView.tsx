@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon, ChevronDown, ChevronRight, ClipboardList, MoreVertical, Eye } from 'lucide-react';
+import { Calendar, User, FileText, ArrowLeft, Folder as FolderIcon, ChevronDown, ChevronRight, ClipboardList, MoreVertical, Eye, Thermometer, HeartPulse, Activity } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -21,6 +21,8 @@ const FolderView = () => {
   const [attachments, setAttachments] = useState([]);
   const [tests, setTests] = useState([]);
   const [diagnoses, setDiagnoses] = useState([]);
+  const [vitals, setVitals] = useState([]);
+  const [showVitals, setShowVitals] = useState(false);
   const [showTests, setShowTests] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
   const [showDiagnoses, setShowDiagnoses] = useState(false);
@@ -56,6 +58,7 @@ const FolderView = () => {
         setNotes(data.notes || []);
         setAttachments(data.attachments || []);
         setTests(data.tests || []);
+        setVitals(data.vitals || []);
         // Fetch diagnoses separately to ensure we get the right data
         if (data.patient && data.patient.patient_id) {
           await fetchDiagnoses(data.patient.patient_id);
@@ -263,6 +266,55 @@ const FolderView = () => {
           </div>
         </div>
       )}
+      {/* Vitals Section */}
+      <Card>
+        <CardHeader
+          className="flex flex-row items-center gap-2 cursor-pointer hover:bg-gray-50"
+          onClick={() => setShowVitals((prev) => !prev)}
+        >
+          <HeartPulse className="h-5 w-5 text-medical-500" />
+          <CardTitle className="text-lg">Vitals</CardTitle>
+          <span className="ml-auto flex items-center">
+            {showVitals ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </span>
+        </CardHeader>
+        {showVitals && (
+          <CardContent>
+            {vitals.length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground">No vitals recorded.</div>
+            ) : (
+              <div className="space-y-3">
+                {vitals.map((v) => (
+                  <Card key={v.vital_id} className="border p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">
+                        {v.recorded_at ? formatDate(v.recorded_at) : 'N/A'}
+                      </div>
+                      {v.source === 'robot_simulated' && (
+                        <span className="text-xs text-muted-foreground italic">simulated</span>
+                      )}
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Thermometer className="h-4 w-4 text-medical-500" />
+                        <span>{v.temperature}&deg;C</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <HeartPulse className="h-4 w-4 text-medical-500" />
+                        <span>{v.pulse} bpm</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-medical-500" />
+                        <span>{v.spo2}% SpO2</span>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
       {/* You can add more sections for notes, attachments, tests, diagnoses, etc. */}
       {/* Example: */}
       <Card>
