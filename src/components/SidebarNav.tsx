@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { ActivitySquare, ChevronLeft, ChevronRight, FolderOpen, Home, LogOut, Settings, UserRound, MessageSquare, Video, Users, UserCog, FlaskConical } from "lucide-react";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
+import { CLINICAL_ROLES, DIAGNOSING_ROLES, ADMIN_ONLY } from "@/lib/roles";
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -58,51 +59,58 @@ export const SidebarNav = () => {
       
       <div className="flex-1 overflow-y-auto py-6 px-3">
         <nav className="space-y-2">
-          <SidebarItem 
-            icon={<Home />} 
-            title="Dashboard" 
-            to="/dashboard" 
-            isCollapsed={collapsed} 
+          <SidebarItem
+            icon={<Home />}
+            title="Dashboard"
+            to="/dashboard"
+            isCollapsed={collapsed}
           />
-          <SidebarItem 
-            icon={<Video />} 
-            title="Manual Control" 
-            to="/manual-control" 
-            isCollapsed={collapsed} 
-          />
-          <SidebarItem 
-            icon={<UserRound />} 
-            title="Patients Details" 
-            to="/patients" 
-            isCollapsed={collapsed} 
-          />
-          <SidebarItem 
-            icon={<FolderOpen />} 
-            title="Patient Folders" 
-            to="/folders" 
-            isCollapsed={collapsed} 
-          />
-          {/* Test sidebar item, only for technicians or admin */}
-          {user && (user.role === 'technician' || user.role === 'admin') && (
-            <SidebarItem 
-              icon={<FlaskConical />} 
-              title="Tests" 
-              to="/tests" 
-              isCollapsed={collapsed} 
+          {user && DIAGNOSING_ROLES.includes(user.role) && (
+            <SidebarItem
+              icon={<Video />}
+              title="Manual Control"
+              to="/manual-control"
+              isCollapsed={collapsed}
             />
           )}
-          <SidebarItem 
-            icon={<MessageSquare />} 
-            title="Response" 
-            to="/responses" 
-            isCollapsed={collapsed} 
+          <SidebarItem
+            icon={<UserRound />}
+            title="Patients Details"
+            to="/patients"
+            isCollapsed={collapsed}
           />
-          <SidebarItem 
-            icon={<Users />} 
-            title="Manage Staff" 
-            to="/manage-staff" 
-            isCollapsed={collapsed} 
-          />
+          {user && CLINICAL_ROLES.includes(user.role) && (
+            <SidebarItem
+              icon={<FolderOpen />}
+              title="Patient Folders"
+              to="/folders"
+              isCollapsed={collapsed}
+            />
+          )}
+          {user && CLINICAL_ROLES.includes(user.role) && (
+            <SidebarItem
+              icon={<FlaskConical />}
+              title="Tests"
+              to="/tests"
+              isCollapsed={collapsed}
+            />
+          )}
+          {user && DIAGNOSING_ROLES.includes(user.role) && (
+            <SidebarItem
+              icon={<MessageSquare />}
+              title="Response"
+              to="/responses"
+              isCollapsed={collapsed}
+            />
+          )}
+          {user && ADMIN_ONLY.includes(user.role) && (
+            <SidebarItem
+              icon={<Users />}
+              title="Manage Staff"
+              to="/manage-staff"
+              isCollapsed={collapsed}
+            />
+          )}
         </nav>
       </div>
       

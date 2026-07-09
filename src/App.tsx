@@ -16,6 +16,7 @@ import NotFound from "@/pages/NotFound";
 import ManageStaff from "@/pages/ManageStaff";
 import FolderView from "@/pages/FolderView";
 import Test from "@/pages/Test";
+import { CLINICAL_ROLES, DIAGNOSING_ROLES, ADMIN_ONLY } from "@/lib/roles";
 
 const queryClient = new QueryClient();
 
@@ -38,19 +39,54 @@ const App = () => {
                 }
               >
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/manual-control" element={<ManualControl />} />
-                <Route path="/patients" element={<Patients />} />
-                <Route path="/folders" element={<Folders />} />
-                <Route path="/folders/:folder_id" element={<FolderView />} />
-                <Route path="/tests" element={<Test />} />
-                <Route path="/responses" element={<Responses />} />
-                <Route 
-                  path="/manage-staff" 
+                <Route
+                  path="/manual-control"
                   element={
-                    <ProtectedRoutes requiredRoles={['admin']}>
+                    <ProtectedRoutes requiredRoles={DIAGNOSING_ROLES}>
+                      <ManualControl />
+                    </ProtectedRoutes>
+                  }
+                />
+                <Route path="/patients" element={<Patients />} />
+                <Route
+                  path="/folders"
+                  element={
+                    <ProtectedRoutes requiredRoles={CLINICAL_ROLES}>
+                      <Folders />
+                    </ProtectedRoutes>
+                  }
+                />
+                <Route
+                  path="/folders/:folder_id"
+                  element={
+                    <ProtectedRoutes requiredRoles={CLINICAL_ROLES}>
+                      <FolderView />
+                    </ProtectedRoutes>
+                  }
+                />
+                <Route
+                  path="/tests"
+                  element={
+                    <ProtectedRoutes requiredRoles={CLINICAL_ROLES}>
+                      <Test />
+                    </ProtectedRoutes>
+                  }
+                />
+                <Route
+                  path="/responses"
+                  element={
+                    <ProtectedRoutes requiredRoles={DIAGNOSING_ROLES}>
+                      <Responses />
+                    </ProtectedRoutes>
+                  }
+                />
+                <Route
+                  path="/manage-staff"
+                  element={
+                    <ProtectedRoutes requiredRoles={ADMIN_ONLY}>
                       <ManageStaff />
                     </ProtectedRoutes>
-                  } 
+                  }
                 />
               </Route>
               <Route path="/404" element={<NotFound />} />

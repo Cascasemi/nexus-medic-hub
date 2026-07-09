@@ -67,7 +67,9 @@ const Responses = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE_URL}/reports`);
+      const res = await fetch(`${API_BASE_URL}/reports`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.success) {
         setReports(data.data || []);
