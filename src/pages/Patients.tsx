@@ -120,6 +120,7 @@ interface PatientFormData {
 const Patients = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const isReceptionist = user?.role === "receptionist";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -419,24 +420,28 @@ const Patients = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Select 
-            value={statusFilter}
-            onValueChange={(value) => setStatusFilter(value)}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="stable">Stable</SelectItem>
-              <SelectItem value="critical">Critical</SelectItem>
-              <SelectItem value="improving">Improving</SelectItem>
-              <SelectItem value="observation">Observation</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={() => setIsAddDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Add Patient
-          </Button>
+          {!isReceptionist && (
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => setStatusFilter(value)}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="stable">Stable</SelectItem>
+                <SelectItem value="critical">Critical</SelectItem>
+                <SelectItem value="improving">Improving</SelectItem>
+                <SelectItem value="observation">Observation</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          {!isReceptionist && (
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Add Patient
+            </Button>
+          )}
         </div>
       </div>
 
@@ -447,8 +452,8 @@ const Patients = () => {
             <TableRow>
               <TableHead>Patient Name</TableHead>
               <TableHead>Age</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Provider</TableHead>
+              {!isReceptionist && <TableHead>Status</TableHead>}
+              {!isReceptionist && <TableHead>Provider</TableHead>}
               <TableHead>Admission Date</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -456,7 +461,7 @@ const Patients = () => {
           <TableBody>
             {filteredPatients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-32">
+                <TableCell colSpan={isReceptionist ? 4 : 6} className="text-center h-32">
                   No patients found
                 </TableCell>
               </TableRow>
@@ -467,12 +472,16 @@ const Patients = () => {
                     {patient.first_name} {patient.last_name}
                   </TableCell>
                   <TableCell>{patient.age}</TableCell>
-                  <TableCell>
-                    <Badge className={statusColors[patient.current_status || 'stable']}>
-                      {patient.current_status || 'Unknown'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{patient.assigned_provider_name || 'Unassigned'}</TableCell>
+                  {!isReceptionist && (
+                    <TableCell>
+                      <Badge className={statusColors[patient.current_status || 'stable']}>
+                        {patient.current_status || 'Unknown'}
+                      </Badge>
+                    </TableCell>
+                  )}
+                  {!isReceptionist && (
+                    <TableCell>{patient.assigned_provider_name || 'Unassigned'}</TableCell>
+                  )}
                   <TableCell>
                     {format(new Date(patient.admission_date), 'MMM dd, yyyy')}
                   </TableCell>
@@ -490,37 +499,39 @@ const Patients = () => {
                           <FileText className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          setSelectedPatient(patient);
-                          setFormData({
-                            first_name: patient.first_name,
-                            last_name: patient.last_name,
-                            date_of_birth: patient.date_of_birth.split('T')[0],
-                            blood_group: patient.blood_group || "",
-                            phone: patient.phone || "",
-                            email: patient.email || "",
-                            emergency_contact: patient.emergency_contact || {
-                              name: "",
-                              relationship: "",
-                              phone: ""
-                            },
-                            address: patient.address || {
-                              street: "",
-                              city: "",
-                              state: "",
-                              country: "",
-                              postalCode: ""
-                            },
-                            current_status: patient.current_status || "stable",
-                            current_diagnosis: patient.current_diagnosis || "",
-                            medical_history: patient.medical_history || "",
-                            assigned_provider: patient.assigned_provider || null
-                          });
-                          setIsEditDialogOpen(true);
-                        }}>
-                          <Edit2 className="h-4 w-4 mr-2" />
-                          Edit Patient
-                        </DropdownMenuItem>
+                        {!isReceptionist && (
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedPatient(patient);
+                            setFormData({
+                              first_name: patient.first_name,
+                              last_name: patient.last_name,
+                              date_of_birth: patient.date_of_birth.split('T')[0],
+                              blood_group: patient.blood_group || "",
+                              phone: patient.phone || "",
+                              email: patient.email || "",
+                              emergency_contact: patient.emergency_contact || {
+                                name: "",
+                                relationship: "",
+                                phone: ""
+                              },
+                              address: patient.address || {
+                                street: "",
+                                city: "",
+                                state: "",
+                                country: "",
+                                postalCode: ""
+                              },
+                              current_status: patient.current_status || "stable",
+                              current_diagnosis: patient.current_diagnosis || "",
+                              medical_history: patient.medical_history || "",
+                              assigned_provider: patient.assigned_provider || null
+                            });
+                            setIsEditDialogOpen(true);
+                          }}>
+                            <Edit2 className="h-4 w-4 mr-2" />
+                            Edit Patient
+                          </DropdownMenuItem>
+                        )}
                         {user?.role === "admin" && (
                           <DropdownMenuItem
                             onClick={() => {
@@ -1088,9 +1099,11 @@ const Patients = () => {
                         {selectedPatient.age} years | {selectedPatient.blood_group || 'Blood type not specified'}
                       </p>
                     </div>
-                    <Badge className={statusColors[selectedPatient.current_status || 'stable']}>
-                      {selectedPatient.current_status || 'Unknown status'}
-                    </Badge>
+                    {!isReceptionist && (
+                      <Badge className={statusColors[selectedPatient.current_status || 'stable']}>
+                        {selectedPatient.current_status || 'Unknown status'}
+                      </Badge>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -1128,17 +1141,19 @@ const Patients = () => {
                     </div>
                   )}
 
-                  {selectedPatient.assigned_provider ? (
-                    <div>
-                      <Label className="flex items-center gap-2">
-                        <Stethoscope className="h-4 w-4" /> Assigned Provider
-                      </Label>
-                      <p>{selectedPatient.assigned_provider_name || selectedPatient.assigned_provider}</p>
-                    </div>
-                  ) : (
-                    <div className="text-muted-foreground">
-                      No provider assigned
-                    </div>
+                  {!isReceptionist && (
+                    selectedPatient.assigned_provider ? (
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <Stethoscope className="h-4 w-4" /> Assigned Provider
+                        </Label>
+                        <p>{selectedPatient.assigned_provider_name || selectedPatient.assigned_provider}</p>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground">
+                        No provider assigned
+                      </div>
+                    )
                   )}
 
                   {selectedPatient.emergency_contact && (
@@ -1166,14 +1181,14 @@ const Patients = () => {
                     </div>
                   )}
 
-                  {selectedPatient.current_diagnosis && (
+                  {!isReceptionist && selectedPatient.current_diagnosis && (
                     <div>
                       <Label>Current Diagnosis</Label>
                       <p className="mt-2">{selectedPatient.current_diagnosis}</p>
                     </div>
                   )}
 
-                  {selectedPatient.medical_history && (
+                  {!isReceptionist && selectedPatient.medical_history && (
                     <div>
                       <Label>Medical History</Label>
                       <p className="mt-2 whitespace-pre-line">{selectedPatient.medical_history}</p>

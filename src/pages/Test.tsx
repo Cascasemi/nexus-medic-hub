@@ -18,6 +18,7 @@ import {
   DialogClose,
   DialogFooter
 } from "@/components/ui/dialog";
+import { TEST_ROLES } from '@/lib/roles';
 
 // API URL - Environment variable takes precedence
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -65,7 +66,7 @@ const Test = () => {
     console.log("User:", user, "Token:", token ? "Present" : "Missing");
     
     // Check if user has appropriate role
-    if (!user || (user.role !== 'Lab Technician' && user.role !== 'admin')) {
+    if (!user || !TEST_ROLES.includes(user.role)) {
       console.log("User does not have appropriate role, redirecting");
       toast({ 
         title: 'Access Denied', 
@@ -726,7 +727,7 @@ const Test = () => {
     });
   };
 
-  if (!user || (user.role !== 'Lab Technician' && user.role !== 'admin')) {
+  if (!user || !TEST_ROLES.includes(user.role)) {
     return <div className="p-6 text-center">Access denied.</div>;
   }
   

@@ -16,7 +16,7 @@ import NotFound from "@/pages/NotFound";
 import ManageStaff from "@/pages/ManageStaff";
 import FolderView from "@/pages/FolderView";
 import Test from "@/pages/Test";
-import { CLINICAL_ROLES, DIAGNOSING_ROLES, ADMIN_ONLY } from "@/lib/roles";
+import { FOLDER_ROLES, TEST_ROLES, DIAGNOSING_ROLES, ADMIN_ONLY } from "@/lib/roles";
 
 const queryClient = new QueryClient();
 
@@ -51,7 +51,7 @@ const App = () => {
                 <Route
                   path="/folders"
                   element={
-                    <ProtectedRoutes requiredRoles={CLINICAL_ROLES}>
+                    <ProtectedRoutes requiredRoles={FOLDER_ROLES}>
                       <Folders />
                     </ProtectedRoutes>
                   }
@@ -59,7 +59,7 @@ const App = () => {
                 <Route
                   path="/folders/:folder_id"
                   element={
-                    <ProtectedRoutes requiredRoles={CLINICAL_ROLES}>
+                    <ProtectedRoutes requiredRoles={FOLDER_ROLES}>
                       <FolderView />
                     </ProtectedRoutes>
                   }
@@ -67,7 +67,7 @@ const App = () => {
                 <Route
                   path="/tests"
                   element={
-                    <ProtectedRoutes requiredRoles={CLINICAL_ROLES}>
+                    <ProtectedRoutes requiredRoles={TEST_ROLES}>
                       <Test />
                     </ProtectedRoutes>
                   }

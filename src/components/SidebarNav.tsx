@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { ActivitySquare, ChevronLeft, ChevronRight, FolderOpen, Home, LogOut, Settings, UserRound, MessageSquare, Video, Users, UserCog, FlaskConical } from "lucide-react";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
-import { CLINICAL_ROLES, DIAGNOSING_ROLES, ADMIN_ONLY } from "@/lib/roles";
+import { FOLDER_ROLES, TEST_ROLES, DIAGNOSING_ROLES, ADMIN_ONLY } from "@/lib/roles";
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -79,7 +79,7 @@ export const SidebarNav = () => {
             to="/patients"
             isCollapsed={collapsed}
           />
-          {user && CLINICAL_ROLES.includes(user.role) && (
+          {user && FOLDER_ROLES.includes(user.role) && (
             <SidebarItem
               icon={<FolderOpen />}
               title="Patient Folders"
@@ -87,7 +87,7 @@ export const SidebarNav = () => {
               isCollapsed={collapsed}
             />
           )}
-          {user && CLINICAL_ROLES.includes(user.role) && (
+          {user && TEST_ROLES.includes(user.role) && (
             <SidebarItem
               icon={<FlaskConical />}
               title="Tests"
